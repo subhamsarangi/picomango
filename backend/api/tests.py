@@ -115,4 +115,48 @@ class CloudinaryIntegrationTests(TestCase):
             
         self.assertTrue(deletion_success, "Cloudinary deletion raised an exception")
 
+class TemplateCRUDTests(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(username='test_template_user', email='template@test.com', password='pwd')
+        self.client.force_authenticate(user=self.user)
+        self.url = '/api/templates/'
 
+    def test_template_crud_and_lock(self):
+        # 1. Setup plain template and origin item
+        template = PromptTemplate.objects.create(raw_content='A plain prompt', is_locked=False)
+        item = Item.objects.create(
+            template=template, 
+            resolved_text='A plain prompt',
+            image_url='http://res.cloudinary.com/dummy/orig.jpg',
+            thumb_url='http://res.cloudinary.com/dummy/thumb.jpg'
+        )
+        template.origin_item = item
+        template.save()
+
+        # 2. Update template to introduce placeholders
+        update_url = f'{self.url}{template.id}/'
+        response = self.client.patch(update_url, {
+            'title': 'My Template',
+            'raw_content': 'A photo of <<subject>> in <<style>>'
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Ensure placeholders were properly extracted and sorted
+        self.assertEqual(response.data['placeholders'], ['style', 'subject'])
+        
+        # 3. Lock template
+        response = self.client.patch(update_url, {
+            'is_locked': True
+        })
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        
+        # Verify origin item placeholder_values backfill
+        item.refresh_from_db()
+        self.assertEqual(item.placeholder_values, {'style': '', 'subject': ''})
+        
+        # 4. Attempt to update locked template (should fail)
+        response = self.client.patch(update_url, {
+            'title': 'Hacked Title'
+        })
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('Cannot edit a locked template.', str(response.data))

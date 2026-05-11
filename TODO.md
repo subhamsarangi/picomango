@@ -5,7 +5,7 @@
 - [x] Auth (email + password)
 - [x] Models + migrations
 - [x] Cloudinary integration
-- [ ] Template CRUD + lock logic
+- [x] Template CRUD + lock logic
 - [ ] Item CRUD + placeholder backfill
 
 ## Frontend (React + TypeScript)
