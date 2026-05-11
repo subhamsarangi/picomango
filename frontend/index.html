@@ -6,8 +6,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>frontend</title>
   </head>
+  <style>
+    #initial-loader {
+      position: fixed; inset: 0; display: flex; flex-direction: column; 
+      align-items: center; justify-content: center; background: white; z-index: 9999;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .spinner {
+      width: 50px; height: 50px; border: 4px solid #f3f3f3;
+      border-top: 4px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
   <body>
     <div id="root"></div>
+    <div id="initial-loader">
+      <div class="spinner"></div>
+      <p style="margin-top: 20px; font-weight: bold; color: #1e293b;">Igniting PicoMango...</p>
+      <div id="load-timer" style="margin-top: 10px; font-family: monospace; color: #64748b; font-size: 14px;">
+        Time: <span id="seconds">0.0</span>s
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      (function() {
+        const start = performance.now();
+        const secondsEl = document.getElementById('seconds');
+        const timer = setInterval(() => {
+          const now = performance.now();
+          if (secondsEl) secondsEl.innerText = ((now - start) / 1000).toFixed(1);
+        }, 100);
+        window.__loadTimer = timer;
+      })();
+    </script>
   </body>
 </html>

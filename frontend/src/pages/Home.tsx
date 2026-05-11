@@ -4,15 +4,13 @@ import api from '@/api';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faPlus, 
-  faSpinner, 
-  faLayerGroup, 
-  faPenToSquare,
-  faChevronRight,
-  faCircleCheck,
-  faLock
-} from '@fortawesome/free-solid-svg-icons';
+import { faPlus } from '@fortawesome/free-solid-svg-icons/faPlus';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons/faSpinner';
+import { faLayerGroup } from '@fortawesome/free-solid-svg-icons/faLayerGroup';
+import { faPenToSquare } from '@fortawesome/free-solid-svg-icons/faPenToSquare';
+import { faChevronRight } from '@fortawesome/free-solid-svg-icons/faChevronRight';
+import { faCircleCheck } from '@fortawesome/free-solid-svg-icons/faCircleCheck';
+import { faLock } from '@fortawesome/free-solid-svg-icons/faLock';
 import { Badge } from "@/components/ui/badge";
 import Loader from '@/components/Loader';
 
@@ -33,7 +31,9 @@ export default function Home() {
     const fetchTemplates = async () => {
       try {
         const response = await api.get('templates/');
-        setTemplates(response.data);
+        // Handle paginated response
+        const data = response.data.results !== undefined ? response.data.results : response.data;
+        setTemplates(data);
       } catch (err) {
         console.error(err);
       } finally {

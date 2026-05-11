@@ -7,6 +7,7 @@
 - [x] Cloudinary integration
 - [x] Template CRUD + lock logic
 - [x] Item CRUD + placeholder backfill
+- [x] Multi-user isolation (Data privacy)
 
 ## Frontend (React + TypeScript)
 - [x] React scaffold + routing

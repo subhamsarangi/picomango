@@ -4,19 +4,17 @@ import api from '@/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { 
-  faSpinner, 
-  faPlus, 
-  faArrowLeft, 
-  faLayerGroup,
-  faImage,
-  faEye,
-  faTrash,
-  faTriangleExclamation,
-  faCircleExclamation,
-  faChevronDown,
-  faListCheck
-} from '@fortawesome/free-solid-svg-icons';
+import { faSpinner } from '@fortawesome/free-solid-svg-icons/faSpinner';
+import { faPlus } from '@fortawesome/free-solid-svg-icons/faPlus';
+import { faArrowLeft } from '@fortawesome/free-solid-svg-icons/faArrowLeft';
+import { faLayerGroup } from '@fortawesome/free-solid-svg-icons/faLayerGroup';
+import { faImage } from '@fortawesome/free-solid-svg-icons/faImage';
+import { faEye } from '@fortawesome/free-solid-svg-icons/faEye';
+import { faTrash } from '@fortawesome/free-solid-svg-icons/faTrash';
+import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons/faTriangleExclamation';
+import { faCircleExclamation } from '@fortawesome/free-solid-svg-icons/faCircleExclamation';
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons/faChevronDown';
+import { faListCheck } from '@fortawesome/free-solid-svg-icons/faListCheck';
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -74,7 +72,8 @@ export default function TemplateDetailPage() {
           api.get(`items/`, { params: { template: id } })
         ]);
         setTemplate(tplRes.data);
-        setItems(itemsRes.data);
+        const itemsData = itemsRes.data.results !== undefined ? itemsRes.data.results : itemsRes.data;
+        setItems(itemsData);
       } catch (err: any) {
         console.error(err);
         setError(err.response?.data?.detail || 'Failed to connect to the server.');

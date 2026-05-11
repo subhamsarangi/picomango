@@ -1,23 +1,26 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route, Link as RouterLink, useLocation, useNavigate, Navigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { 
-  faLeaf, 
-  faLayerGroup, 
-  faPlusCircle, 
-  faList, 
-  faRightFromBracket, 
-  faRightToBracket 
-} from '@fortawesome/free-solid-svg-icons'
+import { faLeaf } from '@fortawesome/free-solid-svg-icons/faLeaf'
+import { faLayerGroup } from '@fortawesome/free-solid-svg-icons/faLayerGroup'
+import { faPlusCircle } from '@fortawesome/free-solid-svg-icons/faPlusCircle'
+import { faList } from '@fortawesome/free-solid-svg-icons/faList'
+import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons/faRightFromBracket'
+import { faRightToBracket } from '@fortawesome/free-solid-svg-icons/faRightToBracket'
+import { faSpinner } from '@fortawesome/free-solid-svg-icons/faSpinner'
 import { Button } from "@/components/ui/button"
-import Home from './pages/Home'
-import TemplateEditPage from './pages/TemplateEditPage'
-import TemplateDetailPage from './pages/TemplateDetailPage'
-import ItemDetailPage from './pages/ItemDetailPage'
-import NewItemFromTemplatePage from './pages/NewItemFromTemplatePage'
-import NewItemScratchPage from './pages/NewItemScratchPage'
-import LoginPage from './pages/LoginPage'
-import SignupPage from './pages/SignupPage'
 import { useAuth } from './context/AuthContext'
+import Loader from './components/Loader'
+
+// Lazy load pages
+const Home = lazy(() => import('./pages/Home'))
+const TemplateEditPage = lazy(() => import('./pages/TemplateEditPage'))
+const TemplateDetailPage = lazy(() => import('./pages/TemplateDetailPage'))
+const ItemDetailPage = lazy(() => import('./pages/ItemDetailPage'))
+const NewItemFromTemplatePage = lazy(() => import('./pages/NewItemFromTemplatePage'))
+const NewItemScratchPage = lazy(() => import('./pages/NewItemScratchPage'))
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const SignupPage = lazy(() => import('./pages/SignupPage'))
 
 // Simple wrapper for protected routes
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -96,44 +99,46 @@ function App() {
       </header>
 
       <main className="container mx-auto px-1 lg:px-4 flex-1 py-6">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
-          
-          <Route path="/items/new" element={
-            <ProtectedRoute>
-              <NewItemScratchPage />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/templates/:id/edit" element={
-            <ProtectedRoute>
-              <TemplateEditPage />
-            </ProtectedRoute>
-          } />
+        <Suspense fallback={<Loader message="Assembling components..." />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            
+            <Route path="/items/new" element={
+              <ProtectedRoute>
+                <NewItemScratchPage />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/templates/:id/edit" element={
+              <ProtectedRoute>
+                <TemplateEditPage />
+              </ProtectedRoute>
+            } />
 
-          <Route path="/templates/:id" element={
-            <ProtectedRoute>
-              <TemplateDetailPage />
-            </ProtectedRoute>
-          } />
+            <Route path="/templates/:id" element={
+              <ProtectedRoute>
+                <TemplateDetailPage />
+              </ProtectedRoute>
+            } />
 
-          <Route path="/templates/:id/new-item" element={
-            <ProtectedRoute>
-              <NewItemFromTemplatePage />
-            </ProtectedRoute>
-          } />
+            <Route path="/templates/:id/new-item" element={
+              <ProtectedRoute>
+                <NewItemFromTemplatePage />
+              </ProtectedRoute>
+            } />
 
-          <Route path="/items/:id" element={
-            <ProtectedRoute>
-              <ItemDetailPage />
-            </ProtectedRoute>
-          } />
+            <Route path="/items/:id" element={
+              <ProtectedRoute>
+                <ItemDetailPage />
+              </ProtectedRoute>
+            } />
 
-          <Route path="/templates" element={<div className="p-8 text-center text-muted-foreground">Templates Route (Coming Soon)</div>} />
-          <Route path="/items" element={<div className="p-8 text-center text-muted-foreground">Items Route (Coming Soon)</div>} />
-        </Routes>
+            <Route path="/templates" element={<div className="p-8 text-center text-muted-foreground">Templates Route (Coming Soon)</div>} />
+            <Route path="/items" element={<div className="p-8 text-center text-muted-foreground">Items Route (Coming Soon)</div>} />
+          </Routes>
+        </Suspense>
       </main>
     </div>
   )

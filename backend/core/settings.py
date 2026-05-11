@@ -81,10 +81,10 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
+# Database configuration
 ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
 
-# Using Neon (Postgres 17) for both dev and prod
-if ENVIRONMENT in ('development', 'production'):
+if ENVIRONMENT == 'production':
     import dj_database_url
     DATABASES = {
         'default': dj_database_url.parse(
@@ -93,14 +93,14 @@ if ENVIRONMENT in ('development', 'production'):
             ssl_require=True,
         )
     }
-
-# else:
-#     DATABASES = {
-#         'default': {
-#             'ENGINE': 'django.db.backends.sqlite3',
-#             'NAME': BASE_DIR / 'db.sqlite3',
-#         }
-#     }
+else:
+    # Use Local SQLite for speed in development
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 
@@ -153,7 +153,9 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
-    ]
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
 }
 
 from datetime import timedelta

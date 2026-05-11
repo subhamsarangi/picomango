@@ -15,6 +15,9 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: true,
+    watch: {
+      ignored: ['**/backend/**'],
+    },
   },
   resolve: {
     alias: {
@@ -28,7 +31,15 @@ export default defineConfig({
       'react-router-dom', 
       'axios', 
       '@fortawesome/react-fontawesome', 
-      '@fortawesome/free-solid-svg-icons'
+      '@fortawesome/free-solid-svg-icons',
+      '@fortawesome/fontawesome-svg-core',
+      '@radix-ui/react-accordion',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-label',
+      '@radix-ui/react-slot',
+      'class-variance-authority',
+      'clsx',
+      'tailwind-merge'
     ],
   },
 })

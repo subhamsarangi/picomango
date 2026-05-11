@@ -1,3 +1,4 @@
+from django.db.models import Count
 from rest_framework import generics, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -21,22 +22,31 @@ class SignupView(generics.CreateAPIView):
     serializer_class = SignupSerializer
 
 class PromptTemplateViewSet(viewsets.ModelViewSet):
-    queryset = PromptTemplate.objects.all()
     serializer_class = PromptTemplateSerializer
     permission_classes = (IsAuthenticated,)
 
+    def get_queryset(self):
+        return PromptTemplate.objects.filter(user=self.request.user).annotate(
+            annotated_item_count=Count('items')
+        ).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
 
 class ItemViewSet(viewsets.ModelViewSet):
-    queryset = Item.objects.select_related('template').all()
     serializer_class = ItemSerializer
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        qs = super().get_queryset()
+        qs = Item.objects.filter(user=self.request.user).select_related('template')
         template_id = self.request.query_params.get('template')
         if template_id:
             qs = qs.filter(template_id=template_id)
         return qs
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
 
     @action(detail=False, methods=['post'], url_path='from-scratch',
             serializer_class=ItemFromScratchSerializer)
@@ -48,7 +58,7 @@ class ItemViewSet(viewsets.ModelViewSet):
         """
         serializer = ItemFromScratchSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        item = serializer.save()
+        item = serializer.save(user=request.user)
         return Response(
             {
                 **ItemSerializer(item).data,

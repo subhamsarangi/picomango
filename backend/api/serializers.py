@@ -57,16 +57,20 @@ def extract_placeholder_values(original_text, template_text):
     return result_values
 
 class PromptTemplateSerializer(serializers.ModelSerializer):
-    item_count = serializers.SerializerMethodField(read_only=True)
+    item_count = serializers.IntegerField(source='annotated_item_count', read_only=True)
     class Meta:
         model = PromptTemplate
         fields = '__all__'
-        read_only_fields = ('placeholders', 'created_at', 'item_count')
-    def get_item_count(self, obj):
-        return obj.items.count()
+        read_only_fields = ('user', 'placeholders', 'created_at', 'item_count')
     def validate(self, data):
+        user = self.context['request'].user
         if self.instance and self.instance.is_locked:
             raise serializers.ValidationError("Cannot edit a locked template.")
+        
+        copied_from = data.get('copied_from')
+        if copied_from and copied_from.user != user:
+            raise serializers.ValidationError({"copied_from": "You do not have access to this template."})
+            
         return data
     def update(self, instance, validated_data):
         raw_content = validated_data.get('raw_content', instance.raw_content)
@@ -89,7 +93,7 @@ class ItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Item
         fields = '__all__'
-        read_only_fields = ('resolved_text', 'image_url', 'thumb_url', 'created_at', 'updated_at', 'duplicate_warning')
+        read_only_fields = ('user', 'resolved_text', 'image_url', 'thumb_url', 'created_at', 'updated_at', 'duplicate_warning')
 
     def get_duplicate_warning(self, obj):
         return getattr(obj, '_duplicate_warning', False)
@@ -103,11 +107,16 @@ class ItemSerializer(serializers.ModelSerializer):
             except json.JSONDecodeError:
                 raise serializers.ValidationError({"placeholder_values": "Invalid JSON format."})
 
+        user = self.context['request'].user
         template = data.get('template', getattr(self.instance, 'template', None))
+        
+        if template and template.user != user:
+            raise serializers.ValidationError({"template": "You do not have permission to use this template."})
+
         current_placeholders = data.get('placeholder_values', getattr(self.instance, 'placeholder_values', {}))
         
         if template and current_placeholders:
-            qs = Item.objects.filter(template=template, placeholder_values=current_placeholders)
+            qs = Item.objects.filter(template=template, placeholder_values=current_placeholders, user=user)
             if self.instance: qs = qs.exclude(pk=self.instance.pk)
             data['_has_duplicate'] = qs.exists()
         return data
@@ -142,10 +151,23 @@ class ItemFromScratchSerializer(serializers.Serializer):
         from .services import process_and_upload_image
         prompt_text = validated_data['prompt_text']
         image_file = validated_data['image_file']
+        user = validated_data.get('user')  # Expect user to be passed from view's serializer.save(user=...)
         urls = process_and_upload_image(image_file)
         with transaction.atomic():
-            template = PromptTemplate.objects.create(raw_content=prompt_text, placeholders=[], is_locked=False)
-            item = Item.objects.create(template=template, resolved_text=prompt_text, placeholder_values={}, image_url=urls['image_url'], thumb_url=urls['thumb_url'])
+            template = PromptTemplate.objects.create(
+                raw_content=prompt_text, 
+                placeholders=[], 
+                is_locked=False,
+                user=user
+            )
+            item = Item.objects.create(
+                template=template, 
+                resolved_text=prompt_text, 
+                placeholder_values={}, 
+                image_url=urls['image_url'], 
+                thumb_url=urls['thumb_url'],
+                user=user
+            )
             template.origin_item = item
             template.save(update_fields=['origin_item'])
         return item

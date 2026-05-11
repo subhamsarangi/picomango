@@ -19,6 +19,11 @@ class PromptTemplate(models.Model):
         blank=True,
         related_name='origin_templates'
     )
+    user = models.ForeignKey(
+        'auth.User',
+        on_delete=models.CASCADE,
+        related_name='templates'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -27,6 +32,7 @@ class PromptTemplate(models.Model):
             models.Index(fields=['copied_from']),
             models.Index(fields=['origin_item']),
             models.Index(fields=['is_locked']),
+            models.Index(fields=['user']),
         ]
 
     def __str__(self):
@@ -42,6 +48,11 @@ class Item(models.Model):
     placeholder_values = models.JSONField(default=dict)
     image_url = models.URLField(max_length=1024)
     thumb_url = models.URLField(max_length=1024)
+    user = models.ForeignKey(
+        'auth.User',
+        on_delete=models.CASCADE,
+        related_name='items'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -49,6 +60,7 @@ class Item(models.Model):
         db_table = 'item'
         indexes = [
             models.Index(fields=['template']),
+            models.Index(fields=['user']),
         ]
 
     def __str__(self):
