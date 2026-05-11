@@ -74,9 +74,45 @@ class ModelTests(TestCase):
         self.assertEqual(item.template, template)
         self.assertEqual(item.placeholder_values['subject'], 'cat')
         
-        # Test circular link (origin_item)
         template.origin_item = item
         template.save()
         self.assertEqual(template.origin_item, item)
+
+import os
+from django.conf import settings
+from .services import process_and_upload_image, delete_cloudinary_images
+
+class CloudinaryIntegrationTests(TestCase):
+    def test_upload_and_delete(self):
+        # The test requires actual internet connection and valid Cloudinary credentials in .env
+        dummy_image_path = os.path.join(settings.BASE_DIR.parent, 'meta', 'dummy.jpg')
+        
+        # Ensure the file exists
+        self.assertTrue(os.path.exists(dummy_image_path), "Dummy image not found for testing.")
+        
+        with open(dummy_image_path, 'rb') as f:
+            # Test upload
+            result = process_and_upload_image(f)
+            
+            self.assertIn('image_url', result)
+            self.assertIn('thumb_url', result)
+            
+            # The URLs should contain the 'pico' folder
+            self.assertIn('pico/originals', result['image_url'])
+            self.assertIn('pico/thumbnails', result['thumb_url'])
+            
+            # Store URLs to delete them
+            img_url = result['image_url']
+            thumb_url = result['thumb_url']
+
+        # Test delete
+        # It shouldn't raise any exceptions
+        try:
+            delete_cloudinary_images(img_url, thumb_url)
+            deletion_success = True
+        except Exception as e:
+            deletion_success = False
+            
+        self.assertTrue(deletion_success, "Cloudinary deletion raised an exception")
 
 

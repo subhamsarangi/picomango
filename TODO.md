@@ -4,7 +4,7 @@
 - [x] Django project scaffold + uv setup
 - [x] Auth (email + password)
 - [x] Models + migrations
-- [ ] Cloudinary integration
+- [x] Cloudinary integration
 - [ ] Template CRUD + lock logic
 - [ ] Item CRUD + placeholder backfill
 
