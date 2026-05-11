@@ -34,7 +34,19 @@
 }
 
 @layer base {
-  :root {
+  @layer utilities {
+  .animate-progress-loading {
+    animation: progress-loading 2s infinite ease-in-out;
+  }
+}
+
+@keyframes progress-loading {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0); }
+  100% { transform: translateX(100%); }
+}
+
+:root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
 

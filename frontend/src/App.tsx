@@ -11,6 +11,8 @@ import {
 import { Button } from "@/components/ui/button"
 import Home from './pages/Home'
 import TemplateEditPage from './pages/TemplateEditPage'
+import TemplateDetailPage from './pages/TemplateDetailPage'
+import ItemDetailPage from './pages/ItemDetailPage'
 import NewItemScratchPage from './pages/NewItemScratchPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
@@ -36,13 +38,12 @@ function App() {
   };
 
   const navItems = [
-    { name: 'New Item', path: '/items/new', icon: faPlusCircle },
-    { name: 'Templates', path: '/templates', icon: faLayerGroup },
-    { name: 'Items', path: '/items', icon: faList },
+    { name: 'Library', path: '/', icon: faLayerGroup },
+    { name: 'New from Scratch', path: '/items/new', icon: faPlusCircle },
   ];
 
   return (
-    <div className="h-screen bg-background font-sans overflow-hidden flex flex-col">
+    <div className="min-h-screen bg-background font-sans flex flex-col">
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 px-2 lg:px-4">
         <div className="container flex h-16 items-center justify-between mx-auto">
           <RouterLink to="/" className="flex items-center space-x-2">
@@ -93,7 +94,7 @@ function App() {
         </div>
       </header>
 
-      <main className="container mx-auto px-1 lg:px-4 flex-1 overflow-hidden pb-4">
+      <main className="container mx-auto px-1 lg:px-4 flex-1 py-6">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<LoginPage />} />
@@ -108,6 +109,18 @@ function App() {
           <Route path="/templates/:id/edit" element={
             <ProtectedRoute>
               <TemplateEditPage />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/templates/:id" element={
+            <ProtectedRoute>
+              <TemplateDetailPage />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/items/:id" element={
+            <ProtectedRoute>
+              <ItemDetailPage />
             </ProtectedRoute>
           } />
 
