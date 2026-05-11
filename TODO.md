@@ -15,9 +15,9 @@
 - [x] Setup Axios + JWT Auth context
 - [x] Login/Signup pages
 - [x] Wire up New item from scratch flow to API
-- [ ] New item from template flow
-- [ ] Template detail page (lazy dropdowns)
-- [ ] Delete flows (single + cascade modal)
+- [x] New item from template flow
+- [x] Template detail page (lazy dropdowns)
+- [x] Delete flows (single + cascade modal)
 
 ## Final
-- [ ] Polish
+- [x] Polish

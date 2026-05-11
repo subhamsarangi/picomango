@@ -13,6 +13,7 @@ import Home from './pages/Home'
 import TemplateEditPage from './pages/TemplateEditPage'
 import TemplateDetailPage from './pages/TemplateDetailPage'
 import ItemDetailPage from './pages/ItemDetailPage'
+import NewItemFromTemplatePage from './pages/NewItemFromTemplatePage'
 import NewItemScratchPage from './pages/NewItemScratchPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
@@ -115,6 +116,12 @@ function App() {
           <Route path="/templates/:id" element={
             <ProtectedRoute>
               <TemplateDetailPage />
+            </ProtectedRoute>
+          } />
+
+          <Route path="/templates/:id/new-item" element={
+            <ProtectedRoute>
+              <NewItemFromTemplatePage />
             </ProtectedRoute>
           } />
 
