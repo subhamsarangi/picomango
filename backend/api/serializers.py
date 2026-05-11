@@ -136,12 +136,17 @@ class ItemFromScratchSerializer(serializers.Serializer):
     Flow: new item from scratch → one-time template edit page.
     """
     prompt_text = serializers.CharField()
-    image_url = serializers.URLField()
-    thumb_url = serializers.URLField()
+    image_file = serializers.ImageField(write_only=True)
 
     def create(self, validated_data):
         from django.db import transaction
+        from .services import process_and_upload_image
+        
         prompt_text = validated_data['prompt_text']
+        image_file = validated_data['image_file']
+
+        # Step 0: Process and upload to Cloudinary
+        urls = process_and_upload_image(image_file)
 
         with transaction.atomic():
             # Step 1: create unlocked template with plain prompt as raw_content
@@ -155,8 +160,8 @@ class ItemFromScratchSerializer(serializers.Serializer):
                 template=template,
                 resolved_text=prompt_text,
                 placeholder_values={},
-                image_url=validated_data['image_url'],
-                thumb_url=validated_data['thumb_url'],
+                image_url=urls['image_url'],
+                thumb_url=urls['thumb_url'],
             )
             # Step 3: link origin_item back to item
             template.origin_item = item
