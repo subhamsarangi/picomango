@@ -94,23 +94,14 @@ if ENVIRONMENT in ('development', 'production'):
         )
     }
 
-# --- Turso (libsql) — not used, kept for reference ---
-# turso_url = os.environ.get('TURSO_DB_URL', '').replace('libsql://', 'wss://')
-# turso_token = os.environ.get('TURSO_DB_TOKEN')
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'libsql.db.backends.sqlite3',
-#         'NAME': f"{turso_url}?authToken={turso_token}",
+# else:
+#     DATABASES = {
+#         'default': {
+#             'ENGINE': 'django.db.backends.sqlite3',
+#             'NAME': BASE_DIR / 'db.sqlite3',
+#         }
 #     }
-# }
 
-# --- Local SQLite (dev fallback) ---
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
 
 
 # Password validation

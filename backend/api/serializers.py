@@ -80,3 +80,86 @@ class PromptTemplateSerializer(serializers.ModelSerializer):
 
         return template
 
+
+def _resolve_text(raw_content, placeholder_values):
+    """Merge placeholder_values into raw_content to produce resolved_text."""
+    result = raw_content
+    for key, value in placeholder_values.items():
+        result = result.replace(f'<<{key}>>', value)
+    return result
+
+
+class ItemSerializer(serializers.ModelSerializer):
+    duplicate_warning = serializers.SerializerMethodField(read_only=True)
+
+    class Meta:
+        model = Item
+        fields = '__all__'
+        read_only_fields = ('resolved_text', 'created_at', 'updated_at', 'duplicate_warning')
+
+    def get_duplicate_warning(self, obj):
+        return getattr(obj, '_duplicate_warning', False)
+
+    def validate(self, data):
+        template = data.get('template', getattr(self.instance, 'template', None))
+        placeholder_values = data.get('placeholder_values', {})
+
+        if template and placeholder_values:
+            qs = Item.objects.filter(
+                template=template,
+                placeholder_values=placeholder_values
+            )
+            if self.instance:
+                qs = qs.exclude(pk=self.instance.pk)
+            data['_has_duplicate'] = qs.exists()
+
+        return data
+
+    def create(self, validated_data):
+        has_duplicate = validated_data.pop('_has_duplicate', False)
+        template = validated_data['template']
+        placeholder_values = validated_data.get('placeholder_values', {})
+
+        # Compute resolved_text from template raw_content + placeholder values
+        validated_data['resolved_text'] = _resolve_text(
+            template.raw_content, placeholder_values
+        )
+
+        item = super().create(validated_data)
+        item._duplicate_warning = has_duplicate
+        return item
+
+
+class ItemFromScratchSerializer(serializers.Serializer):
+    """
+    Creates a new PromptTemplate (unlocked) + a linked Item atomically.
+    Flow: new item from scratch → one-time template edit page.
+    """
+    prompt_text = serializers.CharField()
+    image_url = serializers.URLField()
+    thumb_url = serializers.URLField()
+
+    def create(self, validated_data):
+        from django.db import transaction
+        prompt_text = validated_data['prompt_text']
+
+        with transaction.atomic():
+            # Step 1: create unlocked template with plain prompt as raw_content
+            template = PromptTemplate.objects.create(
+                raw_content=prompt_text,
+                placeholders=[],
+                is_locked=False,
+            )
+            # Step 2: create the item (resolved_text = plain prompt, no placeholders yet)
+            item = Item.objects.create(
+                template=template,
+                resolved_text=prompt_text,
+                placeholder_values={},
+                image_url=validated_data['image_url'],
+                thumb_url=validated_data['thumb_url'],
+            )
+            # Step 3: link origin_item back to item
+            template.origin_item = item
+            template.save(update_fields=['origin_item'])
+
+        return item

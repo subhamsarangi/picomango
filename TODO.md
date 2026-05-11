@@ -6,7 +6,7 @@
 - [x] Models + migrations
 - [x] Cloudinary integration
 - [x] Template CRUD + lock logic
-- [ ] Item CRUD + placeholder backfill
+- [x] Item CRUD + placeholder backfill
 
 ## Frontend (React + TypeScript)
 - [ ] React scaffold + routing
