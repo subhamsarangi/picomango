@@ -81,12 +81,36 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
+
+# Using Neon (Postgres 17) for both dev and prod
+if ENVIRONMENT in ('development', 'production'):
+    import dj_database_url
+    DATABASES = {
+        'default': dj_database_url.parse(
+            os.environ.get('NEON_DB_URL', ''),
+            conn_max_age=600,
+            ssl_require=True,
+        )
     }
-}
+
+# --- Turso (libsql) — not used, kept for reference ---
+# turso_url = os.environ.get('TURSO_DB_URL', '').replace('libsql://', 'wss://')
+# turso_token = os.environ.get('TURSO_DB_TOKEN')
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'libsql.db.backends.sqlite3',
+#         'NAME': f"{turso_url}?authToken={turso_token}",
+#     }
+# }
+
+# --- Local SQLite (dev fallback) ---
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 
 # Password validation
@@ -153,7 +177,8 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-DATABASES['default']['OPTIONS'] = {'init_command': 'PRAGMA foreign_keys=ON;'}
+if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+    DATABASES['default']['OPTIONS'] = {'init_command': 'PRAGMA foreign_keys=ON;'}
 
 import cloudinary
 import cloudinary.uploader
