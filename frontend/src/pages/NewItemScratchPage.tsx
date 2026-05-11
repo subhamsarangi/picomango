@@ -65,8 +65,8 @@ export default function NewItemScratchPage() {
   };
 
   return (
-    <div className="lg:h-[calc(100vh-4rem)] flex flex-col max-w-7xl mx-auto px-4 lg:overflow-hidden relative pb-24 lg:pb-0">
-      <div className="py-4 lg:py-6 flex-none">
+    <div className="h-[calc(100vh-4rem)] flex flex-col max-w-7xl mx-auto px-1 lg:px-4 overflow-hidden relative pb-24 lg:pb-6">
+      <div className="py-2 lg:py-6 flex-none">
         <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight flex items-center gap-3 justify-center lg:justify-start text-center lg:text-left">
           <FontAwesomeIcon icon={faWandMagicSparkles} className="text-primary h-6 w-6 lg:h-7 lg:w-7" />
           Create Item from Scratch
@@ -74,7 +74,7 @@ export default function NewItemScratchPage() {
       </div>
 
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 lg:pb-6 overflow-y-auto lg:overflow-visible">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 lg:gap-6 flex-1 min-h-0">
           
           {/* IMAGE COLUMN */}
           <div className="flex flex-col gap-4 lg:gap-6 min-h-0 order-1 lg:order-1">
