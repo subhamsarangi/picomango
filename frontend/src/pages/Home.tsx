@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import api from '@/api';
+import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -41,10 +42,12 @@ interface Template {
   created_at: string;
   item_thumbnails: string[];
   is_public: boolean;
+  user: number;
 }
 
 export default function Home() {
   useDocumentTitle('Library');
+  const { user: currentUser, isAuthenticated } = useAuth();
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isMoreLoading, setIsMoreLoading] = useState(false);
@@ -122,10 +125,10 @@ export default function Home() {
           <h1 className="text-4xl font-extrabold tracking-tight text-center md:text-left">Template Library</h1>
           <p className="text-muted-foreground mt-2 text-lg text-center md:text-left">Your reusable prompt structures</p>
         </div>
-        <RouterLink to="/items/new">
+        <RouterLink to={isAuthenticated ? "/items/new" : "/login"}>
           <Button size="lg" className="h-14 px-8 text-lg font-bold shadow-lg hover:shadow-xl transition-all gap-3">
             <FontAwesomeIcon icon={faPlus} />
-            Create New
+            {isAuthenticated ? 'Create New' : 'Sign in to Create'}
           </Button>
         </RouterLink>
       </div>
@@ -210,7 +213,7 @@ export default function Home() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] text-muted-foreground font-mono">ID: {tpl.id}</span>
-                    {!tpl.is_locked && (
+                    {currentUser && tpl.user === currentUser.id && !tpl.is_locked && (
                       <Button 
                         variant="ghost" 
                         size="icon" 

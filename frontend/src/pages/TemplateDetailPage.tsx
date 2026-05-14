@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import api from '@/api';
+import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,11 +62,13 @@ interface Template {
   next_template_title?: string;
   full_chain?: { id: number; title: string }[];
   is_public: boolean;
+  user: number;
 }
 
 export default function TemplateDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user: currentUser, isAuthenticated } = useAuth();
   const [template, setTemplate] = useState<Template | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   
@@ -87,8 +90,17 @@ export default function TemplateDetailPage() {
   const [modalPage, setModalPage] = useState(1);
   const MODAL_PAGE_SIZE = 5;
 
+  const isOwner = useMemo(() => {
+    return currentUser && template && template.user === currentUser.id;
+  }, [currentUser, template]);
+
   const isRoot = useMemo(() => {
-    return template?.full_chain && template.full_chain.length > 0 && template.full_chain[0].id === template.id;
+    // If it's in a chain and it's the first one, or if it has no parents
+    if (!template) return false;
+    if (template.full_chain && template.full_chain.length > 0) {
+      return template.full_chain[0].id === template.id;
+    }
+    return true; // Fallback
   }, [template]);
 
   const handleTogglePublic = async (checked: boolean) => {
@@ -243,14 +255,18 @@ export default function TemplateDetailPage() {
           </RouterLink>
           <div>
             <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight">{template.title}</h1>
-            <p className="text-muted-foreground mt-1 flex items-center gap-2">
+            <div className="text-muted-foreground mt-1 flex items-center gap-2">
               <Badge variant="outline">Template ID: {template.id}</Badge>
               <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">{items.length} Generations</Badge>
-            </p>
+              <Badge variant={template.is_public ? "outline" : "secondary"} className={`gap-1.5 ${template.is_public ? 'text-emerald-600 border-emerald-200 bg-emerald-50' : 'text-amber-600 border-amber-200 bg-amber-50'}`}>
+                <FontAwesomeIcon icon={template.is_public ? faGlobe : faLock} className="h-2.5 w-2.5" />
+                {template.is_public ? 'Public' : 'Private'}
+              </Badge>
+            </div>
           </div>
         </div>
         <div className="flex flex-col md:flex-row gap-4 items-center w-full md:w-auto">
-          {isRoot && (
+          {isRoot && isOwner && (
             <div className="flex items-center space-x-3 bg-card border rounded-2xl px-4 h-12 shadow-sm">
               <FontAwesomeIcon 
                 icon={template.is_public ? faGlobe : faLock} 
@@ -266,12 +282,14 @@ export default function TemplateDetailPage() {
               />
             </div>
           )}
-          <RouterLink to={`/templates/${template.id}/new-item`} className="w-full md:w-auto flex-1 md:flex-none">
-            <Button className="w-full h-12 px-8 text-lg font-bold shadow-lg gap-3">
-              <FontAwesomeIcon icon={faPlus} />
-              New Item
-            </Button>
-          </RouterLink>
+          {isAuthenticated && (
+            <RouterLink to={`/templates/${template.id}/new-item`} className="w-full md:w-auto flex-1 md:flex-none">
+              <Button className="w-full h-12 px-8 text-lg font-bold shadow-lg gap-3">
+                <FontAwesomeIcon icon={faPlus} />
+                New Item
+              </Button>
+            </RouterLink>
+          )}
         </div>
       </div>
 
@@ -287,11 +305,11 @@ export default function TemplateDetailPage() {
           <CardContent className="p-0 md:p-6">
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-none md:rounded-2xl blur opacity-10 group-hover:opacity-20 transition-opacity"></div>
-              <p className="relative text-sm lg:text-base font-mono leading-relaxed italic bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 p-4 md:p-8 rounded-none md:rounded-2xl border-y md:border border-indigo-100/50 shadow-inner">
+              <div className="relative text-sm lg:text-base font-mono leading-relaxed italic bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 p-4 md:p-8 rounded-none md:rounded-2xl border-y md:border border-indigo-100/50 shadow-inner">
                 <span className="inline-block bg-gradient-to-r from-indigo-950 via-purple-900 to-indigo-900 bg-clip-text text-transparent font-black tracking-tight">
                   "{template.raw_content}"
                 </span>
-              </p>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -409,8 +427,8 @@ export default function TemplateDetailPage() {
                 </div>
               ))}
 
-              {/* ACTION BUTTONS (Only show at the end of the chain) */}
-              {!template.next_template && (
+              {/* ACTION BUTTONS (Only show at the end of the chain if owner) */}
+              {!template.next_template && isOwner && (
                 <div className="flex items-center gap-4 flex-none ml-4">
                   <div className="text-muted-foreground/30">
                     <FontAwesomeIcon icon={faArrowRight} className="h-5 w-5" />
@@ -553,27 +571,29 @@ export default function TemplateDetailPage() {
         </div>
       )}
 
-      {/* DANGER ZONE ACCORDION */}
-      <div className="mt-20 border-t pt-8 opacity-50 hover:opacity-100 transition-opacity">
-        <Accordion type="single" collapsible className="w-full max-w-md mx-auto">
-          <AccordionItem value="danger-zone" className="border-none">
-            <AccordionTrigger className="text-xs text-muted-foreground hover:no-underline py-2 justify-center gap-2">
-               Danger Zone
-            </AccordionTrigger>
-            <AccordionContent className="flex justify-center py-4">
-              <Button 
-                variant="destructive" 
-                size="sm"
-                className="font-bold gap-2 bg-destructive/10 text-destructive hover:bg-destructive"
-                onClick={() => setIsConfirm1Open(true)}
-              >
-                <FontAwesomeIcon icon={faTrash} className="h-3 w-3" />
-                Delete Template
-              </Button>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
+      {/* DANGER ZONE ACCORDION (Owner only) */}
+      {isOwner && (
+        <div className="mt-20 border-t pt-8 opacity-50 hover:opacity-100 transition-opacity">
+          <Accordion type="single" collapsible className="w-full max-w-md mx-auto">
+            <AccordionItem value="danger-zone" className="border-none">
+              <AccordionTrigger className="text-xs text-muted-foreground hover:no-underline py-2 justify-center gap-2">
+                 Danger Zone
+              </AccordionTrigger>
+              <AccordionContent className="flex justify-center py-4">
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  className="font-bold gap-2 bg-destructive/10 text-destructive hover:bg-destructive"
+                  onClick={() => setIsConfirm1Open(true)}
+                >
+                  <FontAwesomeIcon icon={faTrash} className="h-3 w-3" />
+                  Delete Template
+                </Button>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      )}
 
       {/* DELETE MODALS (PREVIOUSLY IMPLEMENTED) */}
       <Dialog open={isConfirm1Open} onOpenChange={setIsConfirm1Open}>

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import api from '@/api';
+import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -37,10 +38,12 @@ interface Item {
   created_at: string;
   placeholder_values: Record<string, string>;
   next_template: number | null;
+  user: number;
 }
 
 export default function ItemDetailPage() {
   useDocumentTitle('Item Details');
+  const { user: currentUser, isAuthenticated } = useAuth();
   const { id } = useParams();
   const navigate = useNavigate();
   const [item, setItem] = useState<Item | null>(null);
@@ -182,7 +185,7 @@ export default function ItemDetailPage() {
           </Card>
 
           <div className="pt-4 flex flex-col gap-3">
-             {item.next_template && (
+             {item.next_template && isAuthenticated && (
                <RouterLink to={`/templates/${item.next_template}/new-item`}>
                   <Button className="w-full h-14 text-lg font-bold bg-indigo-600 hover:bg-indigo-700 shadow-lg gap-3">
                     <FontAwesomeIcon icon={faArrowRight} />
@@ -201,27 +204,29 @@ export default function ItemDetailPage() {
 
       </div>
 
-      {/* DANGER ZONE ACCORDION */}
-      <div className="mt-20 border-t pt-8 opacity-40 hover:opacity-100 transition-opacity">
-        <Accordion type="single" collapsible className="w-full max-w-xs mx-auto">
-          <AccordionItem value="danger-zone" className="border-none">
-            <AccordionTrigger className="text-[10px] text-muted-foreground hover:no-underline py-2 justify-center gap-2 uppercase tracking-widest font-bold">
-               Danger Zone
-            </AccordionTrigger>
-            <AccordionContent className="flex justify-center py-4">
-              <Button 
-                variant="destructive" 
-                size="sm"
-                className="font-bold gap-2 bg-destructive/5 text-destructive hover:bg-destructive hover:text-white transition-all border-none shadow-none"
-                onClick={handleDelete}
-              >
-                <FontAwesomeIcon icon={faTrash} className="h-3 w-3" />
-                Delete Item Permanently
-              </Button>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
-      </div>
+      {/* DANGER ZONE ACCORDION (Owner only) */}
+      {currentUser && item.user === currentUser.id && (
+        <div className="mt-20 border-t pt-8 opacity-40 hover:opacity-100 transition-opacity">
+          <Accordion type="single" collapsible className="w-full max-w-xs mx-auto">
+            <AccordionItem value="danger-zone" className="border-none">
+              <AccordionTrigger className="text-[10px] text-muted-foreground hover:no-underline py-2 justify-center gap-2 uppercase tracking-widest font-bold">
+                 Danger Zone
+              </AccordionTrigger>
+              <AccordionContent className="flex justify-center py-4">
+                <Button 
+                  variant="destructive" 
+                  size="sm"
+                  className="font-bold gap-2 bg-destructive/5 text-destructive hover:bg-destructive hover:text-white transition-all border-none shadow-none"
+                  onClick={handleDelete}
+                >
+                  <FontAwesomeIcon icon={faTrash} className="h-3 w-3" />
+                  Delete Item Permanently
+                </Button>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </div>
+      )}
     </div>
   );
 }

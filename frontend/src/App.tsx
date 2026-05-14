@@ -44,9 +44,11 @@ function App() {
   };
 
   const navItems = [
-    { name: 'Library', path: '/', icon: faLayerGroup },
-    { name: 'New from Scratch', path: '/items/new', icon: faPlusCircle },
+    { name: 'Library', path: '/', icon: faLayerGroup, public: true },
+    { name: 'New from Scratch', path: '/items/new', icon: faPlusCircle, public: false },
   ];
+
+  const visibleNavItems = navItems.filter(item => item.public || isAuthenticated);
 
   return (
     <div className="min-h-screen bg-background font-sans flex flex-col">
@@ -59,7 +61,7 @@ function App() {
 
           <nav className="flex items-center space-x-2">
             <div className="hidden md:flex items-center space-x-1 mr-4">
-              {navItems.map((item) => (
+              {visibleNavItems.map((item) => (
                 <RouterLink
                   key={item.path}
                   to={item.path}
@@ -119,9 +121,7 @@ function App() {
             } />
 
             <Route path="/templates/:id" element={
-              <ProtectedRoute>
-                <TemplateDetailPage />
-              </ProtectedRoute>
+              <TemplateDetailPage />
             } />
 
             <Route path="/templates/:id/new-item" element={
@@ -131,9 +131,7 @@ function App() {
             } />
 
             <Route path="/items/:id" element={
-              <ProtectedRoute>
-                <ItemDetailPage />
-              </ProtectedRoute>
+              <ItemDetailPage />
             } />
 
             <Route path="/account" element={
