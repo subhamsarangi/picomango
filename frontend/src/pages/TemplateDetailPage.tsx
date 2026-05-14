@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons/faSpinner';
 import { faPlus } from '@fortawesome/free-solid-svg-icons/faPlus';
+import { faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons/faWandMagicSparkles';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons/faArrowLeft';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons/faArrowRight';
 import { faLink } from '@fortawesome/free-solid-svg-icons/faLink';
@@ -295,17 +296,27 @@ export default function TemplateDetailPage() {
                   </div>
                 </RouterLink>
               ) : (
-                <div className="flex-none w-64 p-6 rounded-2xl border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center gap-3 bg-muted/5">
-                   <p className="text-xs text-muted-foreground font-medium">Chain ends here</p>
-                   <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-8 text-[10px] font-bold gap-2"
-                    onClick={() => { fetchAllTemplates(); setIsLinkDialogOpen(true); }}
-                   >
-                     <FontAwesomeIcon icon={faPlus} className="h-2 w-2" />
-                     Link Next Template
-                   </Button>
+                <div className="flex flex-none gap-4">
+                  <div 
+                    className="w-64 p-6 rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-3 bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer group"
+                    onClick={() => navigate(`/items/new`, { state: { linkPrev: id } })}
+                  >
+                    <FontAwesomeIcon icon={faWandMagicSparkles} className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
+                    <p className="text-xs text-primary font-bold uppercase tracking-widest">Create New Step</p>
+                  </div>
+
+                  <div className="w-64 p-6 rounded-2xl border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center gap-3 bg-muted/5">
+                    <p className="text-xs text-muted-foreground font-medium">Chain ends here</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-8 text-[10px] font-bold gap-2"
+                      onClick={() => { fetchAllTemplates(); setIsLinkDialogOpen(true); }}
+                    >
+                      <FontAwesomeIcon icon={faPlus} className="h-2 w-2" />
+                      Link Existing
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

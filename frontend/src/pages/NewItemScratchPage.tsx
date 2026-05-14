@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { compressImage } from '@/lib/imageCompression';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,6 +19,8 @@ import {
 
 export default function NewItemScratchPage() {
   useDocumentTitle('New Item');
+  const location = useLocation();
+  const linkPrev = location.state?.linkPrev;
   const [promptText, setPromptText] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -60,8 +62,18 @@ export default function NewItemScratchPage() {
           'Content-Type': 'multipart/form-data',
         },
       });
+      
+      const newTemplateId = response.data.template_id;
+      if (linkPrev) {
+        try {
+          await api.patch(`templates/${linkPrev}/`, { next_template: newTemplateId });
+        } catch (linkErr) {
+          console.error('Failed to auto-link templates:', linkErr);
+        }
+      }
+
       setIsLoading(false);
-      navigate(`/templates/${response.data.template_id}/edit`);
+      navigate(`/templates/${newTemplateId}/edit`);
     } catch (error) {
       console.error(error);
       setIsLoading(false);
