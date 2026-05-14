@@ -42,7 +42,7 @@ import {
 } from "@/components/ui/accordion";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { faLock, faGlobe } from '@fortawesome/free-solid-svg-icons';
+import { faLock, faGlobe, faHashtag } from '@fortawesome/free-solid-svg-icons';
 
 interface Item {
   id: number;
@@ -330,6 +330,13 @@ export default function TemplateDetailPage() {
           </CardHeader>
           <CardContent className="p-0">
              <Accordion type="single" collapsible className="w-full">
+               {template.placeholders.length === 0 && (
+                 <div className="flex flex-col items-center justify-center py-10 text-center opacity-40">
+                   <FontAwesomeIcon icon={faHashtag} className="h-8 w-8 mb-3 text-muted-foreground/50" />
+                   <p className="text-sm font-medium">No dynamic variables</p>
+                   <p className="text-[10px] uppercase tracking-widest mt-1">Found in this blueprint</p>
+                 </div>
+               )}
                {template.placeholders.map((p) => (
                  <AccordionItem key={p} value={p} className="border-b last:border-0 px-4">
                    <AccordionTrigger className="hover:no-underline py-4">

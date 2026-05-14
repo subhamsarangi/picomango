@@ -189,7 +189,11 @@ export default function ItemDetailPage() {
                   </div>
                 ))}
                 {(!item.placeholder_values || Object.keys(item.placeholder_values).length === 0) && (
-                  <p className="text-sm text-muted-foreground italic">No dynamic variables used in this generation.</p>
+                  <div className="flex flex-col items-center justify-center py-6 text-center opacity-40">
+                    <FontAwesomeIcon icon={faHashtag} className="h-8 w-8 mb-3 text-muted-foreground/50" />
+                    <p className="text-sm font-medium">No dynamic variables</p>
+                    <p className="text-[10px] uppercase tracking-widest mt-1">Found in this generation</p>
+                  </div>
                 )}
               </div>
             </CardContent>
