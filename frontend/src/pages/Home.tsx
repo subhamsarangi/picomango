@@ -12,6 +12,7 @@ import { faPenToSquare } from '@fortawesome/free-solid-svg-icons/faPenToSquare';
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons/faChevronRight';
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons/faCircleCheck';
 import { faLock } from '@fortawesome/free-solid-svg-icons/faLock';
+import { faGlobe } from '@fortawesome/free-solid-svg-icons/faGlobe';
 import { faTrash } from '@fortawesome/free-solid-svg-icons/faTrash';
 import { faSitemap } from '@fortawesome/free-solid-svg-icons/faSitemap';
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +40,7 @@ interface Template {
   item_count: number;
   created_at: string;
   item_thumbnails: string[];
+  is_public: boolean;
 }
 
 export default function Home() {
@@ -197,6 +199,12 @@ export default function Home() {
                       <Badge variant="default" className="bg-primary/90 hover:bg-primary gap-1.5 shadow-sm">
                         <FontAwesomeIcon icon={faSitemap} className="h-2 w-2" />
                         Root
+                      </Badge>
+                    )}
+                    {!tpl.is_public && (
+                      <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50 gap-1 shadow-sm">
+                        <FontAwesomeIcon icon={faLock} className="h-2 w-2" />
+                        Private
                       </Badge>
                     )}
                   </div>

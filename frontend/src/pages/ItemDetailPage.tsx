@@ -200,7 +200,6 @@ export default function ItemDetailPage() {
         </div>
 
       </div>
-      </div>
 
       {/* DANGER ZONE ACCORDION */}
       <div className="mt-20 border-t pt-8 opacity-40 hover:opacity-100 transition-opacity">

@@ -5,6 +5,7 @@ class PromptTemplate(models.Model):
     raw_content = models.TextField(unique=True)
     placeholders = models.JSONField(default=list)
     is_locked = models.BooleanField(default=False)
+    is_public = models.BooleanField(default=True)
     copied_from = models.ForeignKey(
         'self', 
         on_delete=models.SET_NULL, 
@@ -39,6 +40,7 @@ class PromptTemplate(models.Model):
             models.Index(fields=['copied_from']),
             models.Index(fields=['origin_item']),
             models.Index(fields=['is_locked']),
+            models.Index(fields=['is_public']),
             models.Index(fields=['user']),
         ]
 
@@ -55,6 +57,7 @@ class Item(models.Model):
     placeholder_values = models.JSONField(default=dict)
     image_url = models.URLField(max_length=1024)
     thumb_url = models.URLField(max_length=1024)
+    is_public = models.BooleanField(default=True)
     user = models.ForeignKey(
         'auth.User',
         on_delete=models.CASCADE,
@@ -67,9 +70,9 @@ class Item(models.Model):
         db_table = 'item'
         indexes = [
             models.Index(fields=['template']),
+            models.Index(fields=['is_public']),
             models.Index(fields=['user']),
         ]
 
     def __str__(self):
         return f"Item {self.id} (Template: {self.template_id})"
-

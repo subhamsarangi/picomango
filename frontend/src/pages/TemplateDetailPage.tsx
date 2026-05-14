@@ -38,6 +38,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { faLock, faGlobe } from '@fortawesome/free-solid-svg-icons';
 
 interface Item {
   id: number;
@@ -57,6 +60,7 @@ interface Template {
   next_template: number | null;
   next_template_title?: string;
   full_chain?: { id: number; title: string }[];
+  is_public: boolean;
 }
 
 export default function TemplateDetailPage() {
@@ -82,6 +86,21 @@ export default function TemplateDetailPage() {
   const [isLinking, setIsLinking] = useState(false);
   const [modalPage, setModalPage] = useState(1);
   const MODAL_PAGE_SIZE = 5;
+
+  const isRoot = useMemo(() => {
+    return template?.full_chain && template.full_chain.length > 0 && template.full_chain[0].id === template.id;
+  }, [template]);
+
+  const handleTogglePublic = async (checked: boolean) => {
+    if (!id) return;
+    try {
+      await api.patch(`templates/${id}/`, { is_public: checked });
+      setTemplate(prev => prev ? { ...prev, is_public: checked } : null);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to update visibility.');
+    }
+  };
 
   const filteredTemplates = useMemo(() => {
     return allTemplates
@@ -230,8 +249,24 @@ export default function TemplateDetailPage() {
             </p>
           </div>
         </div>
-        <div className="flex gap-2 w-full md:w-auto">
-          <RouterLink to={`/templates/${template.id}/new-item`} className="flex-1 md:flex-none">
+        <div className="flex flex-col md:flex-row gap-4 items-center w-full md:w-auto">
+          {isRoot && (
+            <div className="flex items-center space-x-3 bg-card border rounded-2xl px-4 h-12 shadow-sm">
+              <FontAwesomeIcon 
+                icon={template.is_public ? faGlobe : faLock} 
+                className={`h-4 w-4 ${template.is_public ? 'text-emerald-500' : 'text-amber-500'}`} 
+              />
+              <Label htmlFor="public-toggle" className="text-sm font-bold cursor-pointer whitespace-nowrap">
+                {template.is_public ? 'Public' : 'Private'}
+              </Label>
+              <Switch 
+                id="public-toggle" 
+                checked={template.is_public}
+                onCheckedChange={handleTogglePublic}
+              />
+            </div>
+          )}
+          <RouterLink to={`/templates/${template.id}/new-item`} className="w-full md:w-auto flex-1 md:flex-none">
             <Button className="w-full h-12 px-8 text-lg font-bold shadow-lg gap-3">
               <FontAwesomeIcon icon={faPlus} />
               New Item
@@ -332,7 +367,7 @@ export default function TemplateDetailPage() {
 
             <div 
               ref={scrollRef}
-              className="flex items-center gap-4 overflow-x-auto pt-6 pb-4 no-scrollbar scroll-smooth"
+              className="flex items-center gap-4 overflow-x-auto px-10 pt-8 pb-10 no-scrollbar scroll-smooth"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               <style>{`
