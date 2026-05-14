@@ -216,3 +216,9 @@ class ItemFromScratchSerializer(serializers.Serializer):
             template.origin_item = item
             template.save(update_fields=['origin_item'])
         return item
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'username', 'date_joined')
+        read_only_fields = ('id', 'email', 'username', 'date_joined')

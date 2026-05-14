@@ -7,7 +7,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
 from .serializers import (
     EmailTokenObtainPairSerializer, SignupSerializer,
-    PromptTemplateSerializer, ItemSerializer, ItemFromScratchSerializer
+    PromptTemplateSerializer, ItemSerializer, ItemFromScratchSerializer, UserSerializer
 )
 from .models import PromptTemplate, Item
 
@@ -82,3 +82,10 @@ class ItemViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_201_CREATED
         )
+
+class MeView(generics.RetrieveAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = UserSerializer
+
+    def get_object(self):
+        return self.request.user

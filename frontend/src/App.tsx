@@ -7,6 +7,7 @@ import { faPlusCircle } from '@fortawesome/free-solid-svg-icons/faPlusCircle'
 import { faList } from '@fortawesome/free-solid-svg-icons/faList'
 import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons/faRightFromBracket'
 import { faRightToBracket } from '@fortawesome/free-solid-svg-icons/faRightToBracket'
+import { faUser } from '@fortawesome/free-solid-svg-icons/faUser'
 import { faSpinner } from '@fortawesome/free-solid-svg-icons/faSpinner'
 import { Button } from "@/components/ui/button"
 import { useAuth } from './context/AuthContext'
@@ -21,6 +22,7 @@ const NewItemFromTemplatePage = lazy(() => import('./pages/NewItemFromTemplatePa
 const NewItemScratchPage = lazy(() => import('./pages/NewItemScratchPage'))
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const SignupPage = lazy(() => import('./pages/SignupPage'))
+const AccountPage = lazy(() => import('./pages/AccountPage'))
 
 // Simple wrapper for protected routes
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -77,15 +79,14 @@ function App() {
             <div className="h-6 w-[1px] bg-border mx-2 hidden md:block" />
 
             {isAuthenticated ? (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleLogout}
-                className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-2"
-              >
-                <FontAwesomeIcon icon={faRightFromBracket} className="h-4 w-4" />
-                Logout
-              </Button>
+              <div className="flex items-center space-x-2">
+                <RouterLink to="/account">
+                  <Button variant="ghost" size="sm" className="gap-2">
+                    <FontAwesomeIcon icon={faUser} className="h-4 w-4 text-primary" />
+                    Account
+                  </Button>
+                </RouterLink>
+              </div>
             ) : (
               <RouterLink to="/login">
                 <Button variant="default" size="sm" className="gap-2">
@@ -132,6 +133,12 @@ function App() {
             <Route path="/items/:id" element={
               <ProtectedRoute>
                 <ItemDetailPage />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/account" element={
+              <ProtectedRoute>
+                <AccountPage />
               </ProtectedRoute>
             } />
 
