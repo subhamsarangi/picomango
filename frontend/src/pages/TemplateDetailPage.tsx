@@ -230,9 +230,12 @@ export default function TemplateDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <p className="text-lg lg:text-xl font-mono leading-relaxed text-foreground italic bg-background/50 p-6 rounded-2xl border border-primary/5">
-              "{template.raw_content}"
-            </p>
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl blur opacity-10 group-hover:opacity-20 transition-opacity"></div>
+              <p className="relative text-sm lg:text-base font-mono leading-relaxed text-foreground italic bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 p-6 rounded-2xl border border-indigo-100/50 shadow-inner">
+                "{template.raw_content}"
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -353,24 +356,23 @@ export default function TemplateDetailPage() {
                   </div>
                   <div className="flex gap-4">
                     <div 
-                      className="w-36 md:w-48 min-h-[100px] p-4 rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-2 bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer group"
+                      className="w-36 md:w-48 min-h-[100px] p-4 rounded-xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-2 bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer group/btn"
                       onClick={() => navigate(`/items/new`, { state: { linkPrev: id } })}
                     >
-                      <FontAwesomeIcon icon={faWandMagicSparkles} className="h-4 w-4 md:h-5 md:w-5 text-primary group-hover:scale-110 transition-transform" />
-                      <p className="text-[8px] md:text-[10px] text-primary font-bold uppercase tracking-widest text-center">New Step</p>
+                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center group-hover/btn:scale-110 transition-transform">
+                        <FontAwesomeIcon icon={faWandMagicSparkles} className="h-4 w-4 text-primary" />
+                      </div>
+                      <p className="text-[10px] text-primary font-bold uppercase tracking-widest text-center">New Step</p>
                     </div>
 
-                    <div className="w-36 md:w-48 min-h-[100px] p-4 rounded-xl border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center gap-2 bg-muted/5">
-                      <p className="text-[8px] md:text-[10px] text-muted-foreground font-medium text-center">End of Chain</p>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className="h-6 md:h-7 text-[8px] md:text-[10px] font-bold gap-1 px-2"
-                        onClick={() => { fetchAllTemplates(); setIsLinkDialogOpen(true); }}
-                      >
-                        <FontAwesomeIcon icon={faPlus} className="h-1.5 w-1.5 md:h-2 md:w-2" />
-                        Link
-                      </Button>
+                    <div 
+                      className="w-36 md:w-48 min-h-[100px] p-4 rounded-xl border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center gap-2 bg-muted/5 hover:bg-muted/10 transition-all cursor-pointer group/btn"
+                      onClick={() => { fetchAllTemplates(); setIsLinkDialogOpen(true); }}
+                    >
+                      <div className="h-8 w-8 rounded-full bg-muted/20 flex items-center justify-center group-hover/btn:scale-110 transition-transform">
+                        <FontAwesomeIcon icon={faLink} className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest text-center">Link Existing</p>
                     </div>
                   </div>
                 </div>
