@@ -22,6 +22,7 @@ interface Template {
   is_locked: boolean;
   item_count: number;
   created_at: string;
+  item_thumbnails: string[];
 }
 
 export default function Home() {
@@ -105,8 +106,22 @@ export default function Home() {
                 </p>
               </CardContent>
               <CardFooter className="pt-0 pb-4 px-6 flex justify-between items-center">
-                <div className="text-sm font-medium text-muted-foreground">
-                  <span className="text-foreground font-bold">{tpl.item_count || 0}</span> Items
+                <div className="text-sm font-medium text-muted-foreground flex items-center gap-3">
+                  {tpl.item_thumbnails && tpl.item_thumbnails.length > 0 && (
+                    <div className="flex -space-x-3 overflow-hidden">
+                      {tpl.item_thumbnails.map((url, i) => (
+                        <img
+                          key={i}
+                          className="inline-block h-8 w-8 rounded-full ring-2 ring-background object-cover bg-muted"
+                          src={url}
+                          alt={`Generation ${i}`}
+                        />
+                      ))}
+                    </div>
+                  )}
+                  <div>
+                    <span className="text-foreground font-bold">{tpl.item_count || 0}</span> Items
+                  </div>
                 </div>
                 {!tpl.is_locked ? (
                   <RouterLink to={`/templates/${tpl.id}/edit`}>
