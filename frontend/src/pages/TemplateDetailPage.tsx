@@ -203,14 +203,6 @@ export default function TemplateDetailPage() {
           </div>
         </div>
         <div className="flex gap-2 w-full md:w-auto">
-          <Button 
-            variant="destructive" 
-            className="flex-1 md:flex-none h-12 px-6 font-bold gap-2"
-            onClick={() => setIsConfirm1Open(true)}
-          >
-            <FontAwesomeIcon icon={faTrash} />
-            Delete
-          </Button>
           <RouterLink to={`/templates/${template.id}/new-item`} className="flex-1 md:flex-none">
             <Button className="w-full h-12 px-8 text-lg font-bold shadow-lg gap-3">
               <FontAwesomeIcon icon={faPlus} />
@@ -464,6 +456,28 @@ export default function TemplateDetailPage() {
           ))}
         </div>
       )}
+
+      {/* DANGER ZONE ACCORDION */}
+      <div className="mt-20 border-t pt-8 opacity-50 hover:opacity-100 transition-opacity">
+        <Accordion type="single" collapsible className="w-full max-w-md mx-auto">
+          <AccordionItem value="danger-zone" className="border-none">
+            <AccordionTrigger className="text-xs text-muted-foreground hover:no-underline py-2 justify-center gap-2">
+               Danger Zone
+            </AccordionTrigger>
+            <AccordionContent className="flex justify-center py-4">
+              <Button 
+                variant="destructive" 
+                size="sm"
+                className="font-bold gap-2 bg-destructive/10 text-destructive hover:bg-destructive"
+                onClick={() => setIsConfirm1Open(true)}
+              >
+                <FontAwesomeIcon icon={faTrash} className="h-3 w-3" />
+                Delete Template
+              </Button>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </div>
 
       {/* DELETE MODALS (PREVIOUSLY IMPLEMENTED) */}
       <Dialog open={isConfirm1Open} onOpenChange={setIsConfirm1Open}>
