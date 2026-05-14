@@ -27,7 +27,8 @@ class PromptTemplateViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return PromptTemplate.objects.filter(user=self.request.user).annotate(
-            annotated_item_count=Count('items')
+            annotated_item_count=Count('items'),
+            annotated_parent_count=Count('previous_templates')
         ).order_by('-created_at')
 
     def perform_create(self, serializer):

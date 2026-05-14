@@ -13,6 +13,7 @@ import { faChevronRight } from '@fortawesome/free-solid-svg-icons/faChevronRight
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons/faCircleCheck';
 import { faLock } from '@fortawesome/free-solid-svg-icons/faLock';
 import { faTrash } from '@fortawesome/free-solid-svg-icons/faTrash';
+import { faSitemap } from '@fortawesome/free-solid-svg-icons/faSitemap';
 import { Badge } from "@/components/ui/badge";
 import Loader from '@/components/Loader';
 import {
@@ -29,6 +30,7 @@ interface Template {
   title: string;
   raw_content: string;
   is_locked: boolean;
+  is_root: boolean;
   item_count: number;
   created_at: string;
   item_thumbnails: string[];
@@ -113,13 +115,28 @@ export default function Home() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {templates.map((tpl) => (
-            <Card key={tpl.id} className="group flex flex-col border-primary/5 hover:border-primary/20 hover:shadow-xl transition-all duration-300 overflow-hidden">
+            <Card 
+              key={tpl.id} 
+              className={`group flex flex-col transition-all duration-300 overflow-hidden shadow-sm hover:shadow-xl ${
+                tpl.is_root 
+                  ? 'border-primary/20 bg-gradient-to-br from-background to-primary/5 ring-1 ring-primary/10' 
+                  : 'border-primary/5 hover:border-primary/20'
+              }`}
+            >
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start mb-2">
-                  <Badge variant={tpl.is_locked ? "secondary" : "outline"} className="gap-1">
-                     <FontAwesomeIcon icon={tpl.is_locked ? faLock : faPenToSquare} className="h-2.5 w-2.5" />
-                    {tpl.is_locked ? "Locked" : "Draft"}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={tpl.is_locked ? "secondary" : "outline"} className="gap-1">
+                      <FontAwesomeIcon icon={tpl.is_locked ? faLock : faPenToSquare} className="h-2.5 w-2.5" />
+                      {tpl.is_locked ? "Locked" : "Draft"}
+                    </Badge>
+                    {tpl.is_root && (
+                      <Badge variant="default" className="bg-primary/90 hover:bg-primary gap-1.5 shadow-sm">
+                        <FontAwesomeIcon icon={faSitemap} className="h-2 w-2" />
+                        Root
+                      </Badge>
+                    )}
+                  </div>
                   <div className="flex items-center gap-3">
                     <span className="text-[10px] text-muted-foreground font-mono">ID: {tpl.id}</span>
                     {!tpl.is_locked && (
@@ -174,7 +191,15 @@ export default function Home() {
                   </RouterLink>
                 ) : (
                   <RouterLink to={`/templates/${tpl.id}`}>
-                    <Button variant="secondary" size="sm" className="gap-2 font-bold px-4">
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      className={`gap-2 font-bold px-4 transition-all ${
+                        tpl.is_root 
+                          ? 'bg-primary/10 text-primary border border-primary/20 hover:bg-primary/20 shadow-sm' 
+                          : ''
+                      }`}
+                    >
                       View Items
                       <FontAwesomeIcon icon={faChevronRight} />
                     </Button>

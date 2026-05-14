@@ -58,6 +58,7 @@ def extract_placeholder_values(original_text, template_text):
 
 class PromptTemplateSerializer(serializers.ModelSerializer):
     item_count = serializers.IntegerField(source='annotated_item_count', read_only=True)
+    is_root = serializers.SerializerMethodField()
     item_thumbnails = serializers.SerializerMethodField()
     default_values = serializers.SerializerMethodField()
     next_template_title = serializers.CharField(source='next_template.title', read_only=True)
@@ -65,7 +66,11 @@ class PromptTemplateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PromptTemplate
         fields = '__all__'
-        read_only_fields = ('user', 'placeholders', 'created_at', 'item_count', 'item_thumbnails', 'default_values', 'next_template_title')
+        read_only_fields = ('user', 'placeholders', 'created_at', 'item_count', 'is_root', 'item_thumbnails', 'default_values', 'next_template_title')
+
+    def get_is_root(self, obj):
+        # annotated_parent_count comes from the ViewSet's get_queryset
+        return getattr(obj, 'annotated_parent_count', 0) == 0
 
     def get_default_values(self, obj):
         if obj.origin_item:
