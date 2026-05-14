@@ -416,17 +416,14 @@ export default function TemplateDetailPage() {
                   >
                     <div className={`w-36 md:w-48 min-h-[100px] p-3 md:p-4 rounded-xl border-2 transition-all duration-300 flex flex-col justify-center ${
                       step.id === Number(id) 
-                        ? 'border-primary bg-primary/5 shadow-lg scale-105 z-10' 
-                        : 'border-primary/10 bg-background hover:border-primary/30 hover:shadow-sm'
+                        ? 'border-emerald-500 bg-emerald-50 shadow-emerald-200/50 shadow-lg scale-105 z-10' 
+                        : 'border-primary/10 bg-background hover:border-emerald-500/30 hover:shadow-sm'
                     }`}>
-                      {step.id === Number(id) && (
-                        <Badge className="absolute -top-2 left-2 md:left-4 bg-primary animate-bounce shadow-md text-[8px] md:text-[10px] px-1 md:px-2 py-0">Current</Badge>
-                      )}
-                      <h4 className={`font-bold text-xs md:text-sm leading-tight ${step.id === Number(id) ? 'text-primary' : 'group-hover:text-primary transition-colors'}`}>
+                      <h4 className={`font-bold text-xs md:text-sm leading-tight ${step.id === Number(id) ? 'text-emerald-700' : 'group-hover:text-emerald-600 transition-colors'}`}>
                         {step.title}
                       </h4>
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-[8px] md:text-[10px] text-muted-foreground mt-1 md:mt-2 uppercase tracking-widest font-bold">
+                        <p className={`text-[8px] md:text-[10px] uppercase tracking-widest font-bold mt-1 md:mt-2 ${step.id === Number(id) ? 'text-emerald-600' : 'text-muted-foreground group-hover:text-emerald-600 transition-colors'}`}>
                           Step {index + 1}
                         </p>
                         {index === 0 && (
@@ -436,6 +433,11 @@ export default function TemplateDetailPage() {
                           </Badge>
                         )}
                       </div>
+                      {step.id === Number(id) && (
+                        <div className="absolute -top-2 -right-2 bg-emerald-500 text-white text-[8px] px-2 py-0.5 rounded-full font-black uppercase shadow-md animate-bounce">
+                          Current
+                        </div>
+                      )}
                     </div>
                   </RouterLink>
 
