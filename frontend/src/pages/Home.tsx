@@ -12,8 +12,17 @@ import { faPenToSquare } from '@fortawesome/free-solid-svg-icons/faPenToSquare';
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons/faChevronRight';
 import { faCircleCheck } from '@fortawesome/free-solid-svg-icons/faCircleCheck';
 import { faLock } from '@fortawesome/free-solid-svg-icons/faLock';
+import { faTrash } from '@fortawesome/free-solid-svg-icons/faTrash';
 import { Badge } from "@/components/ui/badge";
 import Loader from '@/components/Loader';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 interface Template {
   id: number;
@@ -29,6 +38,8 @@ export default function Home() {
   useDocumentTitle('Library');
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingTemplate, setDeletingTemplate] = useState<Template | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -45,6 +56,21 @@ export default function Home() {
     };
     fetchTemplates();
   }, []);
+
+  const handleDeleteDraft = async () => {
+    if (!deletingTemplate) return;
+    setIsDeleting(true);
+    try {
+      await api.delete(`templates/${deletingTemplate.id}/`);
+      setTemplates(templates.filter(t => t.id !== deletingTemplate.id));
+      setDeletingTemplate(null);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete template.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   if (isLoading) {
     return <Loader message="Fetching your library..." />;
@@ -91,10 +117,26 @@ export default function Home() {
               <CardHeader className="pb-3">
                 <div className="flex justify-between items-start mb-2">
                   <Badge variant={tpl.is_locked ? "secondary" : "outline"} className="gap-1">
-                    <FontAwesomeIcon icon={tpl.is_locked ? faLock : faPenToSquare} className="h-2.5 w-2.5" />
+                     <FontAwesomeIcon icon={tpl.is_locked ? faLock : faPenToSquare} className="h-2.5 w-2.5" />
                     {tpl.is_locked ? "Locked" : "Draft"}
                   </Badge>
-                  <span className="text-[10px] text-muted-foreground font-mono">ID: {tpl.id}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-[10px] text-muted-foreground font-mono">ID: {tpl.id}</span>
+                    {!tpl.is_locked && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setDeletingTemplate(tpl);
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faTrash} className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
                 <CardTitle className="text-xl group-hover:text-primary transition-colors line-clamp-1">
                   {tpl.title || "Untitled Template"}
@@ -143,6 +185,36 @@ export default function Home() {
           ))}
         </div>
       )}
+
+      {/* DELETE DRAFT DIALOG */}
+      <Dialog open={!!deletingTemplate} onOpenChange={(open) => !open && setDeletingTemplate(null)}>
+        <DialogContent className="rounded-3xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-3 text-destructive">
+              <FontAwesomeIcon icon={faTrash} />
+              Delete Draft
+            </DialogTitle>
+            <DialogDescription className="text-base py-4">
+              Are you sure you want to delete <span className="font-bold text-foreground">"{deletingTemplate?.title || 'Untitled Draft'}"</span>?
+              <br/><br/>
+              This will permanently remove the draft and <span className="font-bold text-destructive">ALL associated items and images</span>.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDeletingTemplate(null)} className="h-12 flex-1 font-bold">
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              className="h-12 flex-1 font-bold shadow-lg"
+              onClick={handleDeleteDraft}
+              disabled={isDeleting}
+            >
+              {isDeleting ? <FontAwesomeIcon icon={faSpinner} className="animate-spin" /> : 'Yes, Delete Draft'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -336,7 +336,7 @@ export default function TemplateEditPage() {
             <DialogDescription className="text-base py-4">
               Are you sure you want to discard this template draft? 
               <br/><br/>
-              This action cannot be undone.
+              This will delete the draft and <span className="font-bold text-destructive">ALL associated items and images</span>. This cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
