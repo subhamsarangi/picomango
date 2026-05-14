@@ -83,24 +83,25 @@ WSGI_APPLICATION = 'core.wsgi.application'
 
 # Database configuration
 ENVIRONMENT = os.environ.get('ENVIRONMENT', 'development')
+import dj_database_url
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    },
+}
+
+# Add production entry for migration scripts if URL is available
+if os.environ.get('NEON_DB_URL'):
+    DATABASES['production'] = dj_database_url.parse(
+        os.environ.get('NEON_DB_URL'),
+        conn_max_age=600,
+        ssl_require=True,
+    )
 
 if ENVIRONMENT == 'production':
-    import dj_database_url
-    DATABASES = {
-        'default': dj_database_url.parse(
-            os.environ.get('NEON_DB_URL', ''),
-            conn_max_age=600,
-            ssl_require=True,
-        )
-    }
-else:
-    # Use Local SQLite for speed in development
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+    DATABASES['default'] = DATABASES.get('production', DATABASES['default'])
 
 
 
