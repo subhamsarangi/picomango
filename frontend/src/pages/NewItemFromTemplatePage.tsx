@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { compressImage } from '@/lib/imageCompression';
 import api from '@/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -37,6 +38,7 @@ interface Template {
 }
 
 export default function NewItemFromTemplatePage() {
+  useDocumentTitle('New Item');
   const { id } = useParams();
   const navigate = useNavigate();
   const [template, setTemplate] = useState<Template | null>(null);

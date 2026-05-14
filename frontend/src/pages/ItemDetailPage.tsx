@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import api from '@/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ interface Item {
 }
 
 export default function ItemDetailPage() {
+  useDocumentTitle('Item Details');
   const { id } = useParams();
   const navigate = useNavigate();
   const [item, setItem] = useState<Item | null>(null);

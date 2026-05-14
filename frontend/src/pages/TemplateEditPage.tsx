@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import * as diff from 'diff';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 
 export default function TemplateEditPage() {
+  useDocumentTitle('Edit Template');
   const { id } = useParams();
   const navigate = useNavigate();
   const [content, setContent] = useState('');
