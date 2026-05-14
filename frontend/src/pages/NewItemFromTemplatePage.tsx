@@ -35,6 +35,7 @@ interface Template {
   raw_content: string;
   placeholders: string[];
   is_locked: boolean;
+  default_values?: Record<string, string>;
 }
 
 export default function NewItemFromTemplatePage() {
@@ -59,10 +60,11 @@ export default function NewItemFromTemplatePage() {
         const response = await api.get(`templates/${id}/`);
         setTemplate(response.data);
         
-        // Initialize values
+        // Initialize values with defaults from the origin item if available
         const initialValues: Record<string, string> = {};
+        const defaults = response.data.default_values || {};
         response.data.placeholders.forEach((p: string) => {
-          initialValues[p] = '';
+          initialValues[p] = defaults[p] || '';
         });
         setValues(initialValues);
       } catch (err) {

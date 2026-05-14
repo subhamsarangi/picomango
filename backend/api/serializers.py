@@ -59,11 +59,17 @@ def extract_placeholder_values(original_text, template_text):
 class PromptTemplateSerializer(serializers.ModelSerializer):
     item_count = serializers.IntegerField(source='annotated_item_count', read_only=True)
     item_thumbnails = serializers.SerializerMethodField()
+    default_values = serializers.SerializerMethodField()
 
     class Meta:
         model = PromptTemplate
         fields = '__all__'
-        read_only_fields = ('user', 'placeholders', 'created_at', 'item_count', 'item_thumbnails')
+        read_only_fields = ('user', 'placeholders', 'created_at', 'item_count', 'item_thumbnails', 'default_values')
+
+    def get_default_values(self, obj):
+        if obj.origin_item:
+            return obj.origin_item.placeholder_values
+        return {}
 
     def get_item_thumbnails(self, obj):
         return list(obj.items.order_by('-created_at').values_list('thumb_url', flat=True)[:3])
