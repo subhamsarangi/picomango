@@ -166,10 +166,15 @@ export default function ItemDetailPage() {
                 {isCopied ? "Copied!" : "Copy Prompt"}
               </Button>
             </CardHeader>
-            <CardContent className="p-6">
-              <p className="text-lg font-mono leading-relaxed text-foreground bg-muted/20 p-5 rounded-2xl border border-primary/5 italic select-all">
-                "{item.resolved_text}"
-              </p>
+            <CardContent className="p-0 md:p-6">
+              <div className="relative group">
+                <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-none md:rounded-2xl blur opacity-10 group-hover:opacity-20 transition-opacity"></div>
+                <div className="relative text-sm lg:text-base font-mono leading-relaxed italic bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 p-4 md:p-8 rounded-none md:rounded-2xl border-y md:border border-indigo-100/50 shadow-inner">
+                  <span className="inline-block bg-gradient-to-r from-indigo-950 via-purple-900 to-indigo-900 bg-clip-text text-transparent font-black tracking-tight select-all">
+                    "{item.resolved_text}"
+                  </span>
+                </div>
+              </div>
             </CardContent>
           </Card>
 

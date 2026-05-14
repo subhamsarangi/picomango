@@ -573,7 +573,7 @@ export default function TemplateDetailPage() {
                   <img 
                     src={item.thumb_url} 
                     alt={item.resolved_text.substring(0, 20)} 
-                    className="w-full h-full object-contain mx-auto block transition-all duration-500 blur-md group-hover:!blur-none group-hover:scale-105"
+                    className={`w-full h-full object-contain mx-auto block transition-all duration-500 group-hover:scale-105 ${!template.is_public ? 'blur-md group-hover:!blur-none' : ''}`}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
                     <div className="space-y-1">
