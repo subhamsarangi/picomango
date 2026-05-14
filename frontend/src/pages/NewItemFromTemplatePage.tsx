@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { compressImage } from '@/lib/imageCompression';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import api from '@/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,8 +44,13 @@ export default function NewItemFromTemplatePage() {
   const navigate = useNavigate();
   const [template, setTemplate] = useState<Template | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const { 
+    imageFile, 
+    imagePreview, 
+    handleImageChange, 
+    handleDrop, 
+    handlePaste 
+  } = useImageUpload();
   
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -77,16 +82,7 @@ export default function NewItemFromTemplatePage() {
     fetchTemplate();
   }, [id]);
 
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const originalFile = e.target.files[0];
-      const compressedFile = await compressImage(originalFile);
-      setImageFile(compressedFile);
-      const reader = new FileReader();
-      reader.onloadend = () => setImagePreview(reader.result as string);
-      reader.readAsDataURL(compressedFile);
-    }
-  };
+
 
   const handleSubmit = async (force = false) => {
     if (!imageFile) {
@@ -131,7 +127,10 @@ export default function NewItemFromTemplatePage() {
   if (!template) return <div className="p-8 text-center">Template not found.</div>;
 
   return (
-    <div className="max-w-4xl mx-auto px-1 lg:px-4 py-8 animate-in fade-in duration-500">
+    <div 
+      className="max-w-4xl mx-auto px-1 lg:px-4 py-8 animate-in fade-in duration-500"
+      onPaste={handlePaste}
+    >
       {/* HEADER */}
       <div className="flex items-center gap-4 mb-8">
         <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-full h-12 w-12 border bg-background shadow-sm hover:shadow-md transition-all">
@@ -177,14 +176,16 @@ export default function NewItemFromTemplatePage() {
                  </div>
                ) : (
                  <div 
-                   className="aspect-square flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors gap-4 p-8 text-center"
+                   className="aspect-square flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors gap-4 p-8 text-center border-2 border-dashed border-transparent hover:border-primary/20"
                    onClick={() => document.getElementById('image-upload')?.click()}
+                   onDrop={handleDrop}
+                   onDragOver={(e) => e.preventDefault()}
                  >
                     <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                        <FontAwesomeIcon icon={faImage} className="h-10 w-10" />
                     </div>
                     <div>
-                      <p className="font-bold text-lg">Click to Upload Image</p>
+                      <p className="font-bold text-lg">Click, Paste or Drop Image</p>
                       <p className="text-sm text-muted-foreground mt-1">Select the generated image for this prompt</p>
                     </div>
                  </div>

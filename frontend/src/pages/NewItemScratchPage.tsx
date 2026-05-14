@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
-import { compressImage } from '@/lib/imageCompression';
+import { useImageUpload } from '@/hooks/useImageUpload';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -22,30 +22,19 @@ export default function NewItemScratchPage() {
   const location = useLocation();
   const linkPrev = location.state?.linkPrev;
   const [promptText, setPromptText] = useState('');
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const {
+    imageFile,
+    imagePreview,
+    handleImageChange,
+    handleDrop,
+    handlePaste,
+    removeImage
+  } = useImageUpload();
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const compressedFile = await compressImage(file);
-      setImageFile(compressedFile);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(compressedFile);
-    }
-  };
 
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +70,10 @@ export default function NewItemScratchPage() {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex flex-col max-w-7xl mx-auto px-1 lg:px-4 overflow-hidden relative pb-24 lg:pb-6">
+    <div 
+      className="h-[calc(100vh-4rem)] flex flex-col max-w-7xl mx-auto px-1 lg:px-4 overflow-hidden relative pb-24 lg:pb-6"
+      onPaste={handlePaste}
+    >
       <div className="py-2 lg:py-6 flex-none">
         <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight flex items-center gap-3 justify-center lg:justify-start text-center lg:text-left">
           <FontAwesomeIcon icon={faWandMagicSparkles} className="text-primary h-6 w-6 lg:h-7 lg:w-7" />
@@ -112,16 +104,18 @@ export default function NewItemScratchPage() {
                     {!imagePreview ? (
                       <div 
                         onClick={() => fileInputRef.current?.click()}
+                        onDrop={handleDrop}
+                        onDragOver={(e) => e.preventDefault()}
                         className="flex-1 min-h-[200px] border-2 border-dashed border-muted-foreground/25 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-all group p-8"
                       >
                         <FontAwesomeIcon icon={faCloudUploadAlt} className="h-10 w-10 text-muted-foreground group-hover:text-primary mb-2" />
-                        <p className="text-base font-medium">Click to upload</p>
+                        <p className="text-base font-medium">Click, Paste or Drop</p>
                         <input 
                           type="file" 
                           className="hidden" 
                           accept="image/*"
                           ref={fileInputRef}
-                          onChange={handleFileChange}
+                          onChange={handleImageChange}
                           required
                         />
                       </div>
