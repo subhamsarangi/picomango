@@ -1,4 +1,4 @@
-from django.db.models import Count
+from django.db.models import Count, Q
 from rest_framework import generics, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -26,10 +26,25 @@ class PromptTemplateViewSet(viewsets.ModelViewSet):
     permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
-        return PromptTemplate.objects.filter(user=self.request.user).annotate(
+        qs = PromptTemplate.objects.filter(user=self.request.user).annotate(
             annotated_item_count=Count('items'),
             annotated_parent_count=Count('previous_templates')
         ).order_by('-created_at')
+
+        # Search filter
+        search = self.request.query_params.get('search')
+        if search:
+            qs = qs.filter(
+                Q(title__icontains=search) | 
+                Q(raw_content__icontains=search)
+            )
+
+        # Root filter
+        is_root = self.request.query_params.get('is_root')
+        if is_root == 'true':
+            qs = qs.filter(annotated_parent_count=0)
+
+        return qs
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

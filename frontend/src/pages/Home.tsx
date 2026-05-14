@@ -16,6 +16,11 @@ import { faTrash } from '@fortawesome/free-solid-svg-icons/faTrash';
 import { faSitemap } from '@fortawesome/free-solid-svg-icons/faSitemap';
 import { Badge } from "@/components/ui/badge";
 import Loader from '@/components/Loader';
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { faSearch } from '@fortawesome/free-solid-svg-icons/faSearch';
+import { faFilter } from '@fortawesome/free-solid-svg-icons/faFilter';
 import {
   Dialog,
   DialogContent,
@@ -40,24 +45,54 @@ export default function Home() {
   useDocumentTitle('Library');
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMoreLoading, setIsMoreLoading] = useState(false);
   const [deletingTemplate, setDeletingTemplate] = useState<Template | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Search and Filter States
+  const [search, setSearch] = useState('');
+  const [onlyRoots, setOnlyRoots] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
     const fetchTemplates = async () => {
+      if (page === 1) setIsLoading(true);
+      else setIsMoreLoading(true);
+      
       try {
-        const response = await api.get('templates/');
-        // Handle paginated response
-        const data = response.data.results !== undefined ? response.data.results : response.data;
-        setTemplates(data);
+        const response = await api.get('templates/', {
+          params: {
+            page,
+            search,
+            is_root: onlyRoots ? 'true' : undefined
+          }
+        });
+        
+        const results = response.data.results || response.data;
+        setTemplates(prev => page === 1 ? results : [...prev, ...results]);
+        setHasMore(!!response.data.next);
+        setTotalCount(response.data.count || results.length);
       } catch (err) {
         console.error(err);
       } finally {
         setIsLoading(false);
+        setIsMoreLoading(false);
       }
     };
-    fetchTemplates();
-  }, []);
+    
+    const timer = setTimeout(() => {
+      fetchTemplates();
+    }, page === 1 ? 400 : 0); // Debounce search on first page
+
+    return () => clearTimeout(timer);
+  }, [page, search, onlyRoots]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [search, onlyRoots]);
 
   const handleDeleteDraft = async () => {
     if (!deletingTemplate) return;
@@ -91,6 +126,34 @@ export default function Home() {
             Create New
           </Button>
         </RouterLink>
+      </div>
+
+      {/* SEARCH AND FILTERS */}
+      <div className="flex flex-col lg:flex-row gap-4 mb-8 bg-muted/30 p-4 rounded-3xl border border-primary/5">
+        <div className="relative flex-1">
+          <FontAwesomeIcon icon={faSearch} className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+          <Input 
+            placeholder="Search templates by title or content..." 
+            className="pl-12 h-14 bg-background border-primary/10 rounded-2xl text-lg focus-visible:ring-primary/20"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="flex items-center gap-6 px-4 bg-background border border-primary/10 rounded-2xl h-14 lg:w-auto">
+          <div className="flex items-center gap-3">
+            <Switch 
+              id="roots-only" 
+              checked={onlyRoots} 
+              onCheckedChange={setOnlyRoots} 
+              className="data-[state=checked]:bg-primary"
+            />
+            <Label htmlFor="roots-only" className="font-bold text-sm cursor-pointer select-none">Roots Only</Label>
+          </div>
+          <div className="h-6 w-px bg-primary/10 hidden md:block" />
+          <div className="text-xs font-bold text-muted-foreground uppercase tracking-widest hidden md:block">
+            {totalCount} Results
+          </div>
+        </div>
       </div>
 
       {templates.length === 0 ? (
@@ -208,6 +271,26 @@ export default function Home() {
               </CardFooter>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* LOAD MORE */}
+      {hasMore && !isLoading && (
+        <div className="mt-12 flex justify-center pb-12">
+          <Button 
+            variant="outline" 
+            size="lg" 
+            className="h-14 px-12 rounded-2xl font-bold border-primary/20 hover:bg-primary/5 gap-3"
+            onClick={() => setPage(p => p + 1)}
+            disabled={isMoreLoading}
+          >
+            {isMoreLoading ? (
+              <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+            ) : (
+              <FontAwesomeIcon icon={faChevronDown} />
+            )}
+            Load More Templates
+          </Button>
         </div>
       )}
 
