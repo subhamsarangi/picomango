@@ -19,7 +19,9 @@ import {
   faCircleCheck,
   faTags,
   faUndo,
-  faRedo
+  faRedo,
+  faCheck,
+  faTimes
 } from '@fortawesome/free-solid-svg-icons';
 import { Badge } from "@/components/ui/badge";
 import {
@@ -45,6 +47,12 @@ export default function TemplateEditPage() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [error, setError] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Placeholder creation states
+  const [isPlaceholderDialogOpen, setIsPlaceholderDialogOpen] = useState(false);
+  const [newPlaceholderName, setNewPlaceholderName] = useState('');
+  const [selection, setSelection] = useState<{ start: number; end: number } | null>(null);
+  const [popoverPos, setPopoverPos] = useState<{ top: number; left: number } | null>(null);
 
   // Strict typography to ensure alignment
   const typographyStyle = {
@@ -89,6 +97,8 @@ export default function TemplateEditPage() {
       } else if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
         e.preventDefault();
         redo();
+      } else if (e.key === 'Escape') {
+        setIsPlaceholderDialogOpen(false);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -125,6 +135,79 @@ export default function TemplateEditPage() {
     }
   };
   
+  const handleTextSelect = () => {
+    if (!textareaRef.current) return;
+    const start = textareaRef.current.selectionStart;
+    const end = textareaRef.current.selectionEnd;
+    
+    if (start !== end) {
+      setSelection({ start, end });
+      setIsPlaceholderDialogOpen(true);
+      setNewPlaceholderName('');
+
+      // Mirror Div calculation for positioning
+      const textarea = textareaRef.current;
+      const { offsetLeft, offsetTop, scrollLeft, scrollTop } = textarea;
+      const styles = window.getComputedStyle(textarea);
+      
+      const mirror = document.createElement('div');
+      mirror.style.position = 'absolute';
+      mirror.style.visibility = 'hidden';
+      mirror.style.whiteSpace = 'pre-wrap';
+      mirror.style.wordWrap = 'break-word';
+      mirror.style.width = textarea.clientWidth + 'px';
+      mirror.style.font = styles.font;
+      mirror.style.padding = styles.padding;
+      mirror.style.border = styles.border;
+      mirror.style.lineHeight = styles.lineHeight;
+      mirror.style.boxSizing = styles.boxSizing;
+      
+      // Text up to the selection start
+      const textBefore = content.substring(0, start);
+      const span = document.createElement('span');
+      span.textContent = content.substring(start, end);
+      
+      mirror.textContent = textBefore;
+      mirror.appendChild(span);
+      document.body.appendChild(mirror);
+      
+      const rect = span.getBoundingClientRect();
+      const mirrorRect = mirror.getBoundingClientRect();
+      
+      // Calculate position relative to textarea
+      // We want it slightly above the selection
+      setPopoverPos({
+        top: span.offsetTop - scrollTop - 45, // 45px offset for the bar height
+        left: Math.min(
+          textarea.clientWidth - 160, // Keep in bounds (bar width roughly 320)
+          Math.max(160, span.offsetLeft - scrollLeft)
+        )
+      });
+      
+      document.body.removeChild(mirror);
+    } else {
+      setIsPlaceholderDialogOpen(false);
+    }
+  };
+
+  const handleCreatePlaceholder = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!newPlaceholderName || !selection) return;
+
+    const before = content.substring(0, selection.start);
+    const after = content.substring(selection.end);
+    const newContent = `${before}<<${newPlaceholderName}>>${after}`;
+    
+    setContent(newContent);
+    setIsPlaceholderDialogOpen(false);
+    setSelection(null);
+    
+    // Refocus textarea after a short delay
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 100);
+  };
+
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
@@ -262,7 +345,7 @@ export default function TemplateEditPage() {
                 </div>
               </CardTitle>
             </CardHeader>
-            <CardContent className="p-0 flex-1 flex flex-col min-h-0">
+            <CardContent className="p-0 flex-1 flex flex-col min-h-0 relative">
               <Textarea
                 ref={textareaRef}
                 id="content"
@@ -270,8 +353,64 @@ export default function TemplateEditPage() {
                 className="flex-1 resize-none border-none focus-visible:ring-0 rounded-none bg-transparent shadow-none"
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
+                onMouseUp={handleTextSelect}
                 disabled={isSaving}
               />
+
+              {/* OVERLAY BACKDROP (Click outside to close) */}
+              {isPlaceholderDialogOpen && (
+                <div 
+                  className="fixed inset-0 z-20 cursor-default" 
+                  onMouseDown={() => setIsPlaceholderDialogOpen(false)}
+                />
+              )}
+
+              {/* MINIMAL FLOATING OVERLAY */}
+              {isPlaceholderDialogOpen && popoverPos && (
+                <div 
+                  className="absolute z-30 animate-in fade-in zoom-in duration-200 pointer-events-auto"
+                  style={{ 
+                    top: `${popoverPos.top}px`, 
+                    left: `${popoverPos.left}px`,
+                    transform: 'translateX(-50%)'
+                  }}
+                  onMouseDown={(e) => e.stopPropagation()}
+                >
+                   <Card className="shadow-xl border border-zinc-300 bg-zinc-200 overflow-hidden w-64">
+                      {/* CLOSE BUTTON */}
+                      <button 
+                        type="button"
+                        onClick={() => setIsPlaceholderDialogOpen(false)}
+                        className="absolute top-1.5 right-1.5 h-5 w-5 flex items-center justify-center text-zinc-500 hover:text-zinc-900 hover:bg-zinc-300 rounded-full transition-colors"
+                      >
+                        <FontAwesomeIcon icon={faTimes} className="h-2.5 w-2.5" />
+                      </button>
+
+                      <div className="p-3 space-y-3">
+                         {/* ROW 1: PREVIEW */}
+                         <div className="text-xs text-zinc-600 font-mono pr-6 overflow-hidden">
+                           <div className="truncate">
+                             <span className="text-zinc-900 italic font-bold">"{selection ? content.substring(selection.start, selection.end).trim() : ''}"</span>
+                           </div>
+                         </div>
+
+                         {/* ROW 2: INPUT + CHECK */}
+                         <form onSubmit={handleCreatePlaceholder} className="flex items-center gap-1">
+                            <Input 
+                               autoFocus
+                               placeholder="Variable name..."
+                               className="h-8 border-zinc-300 bg-white focus-visible:ring-1 focus-visible:ring-primary/50 text-xs font-bold text-zinc-900 flex-1 placeholder:text-zinc-400"
+                               value={newPlaceholderName}
+                               onChange={(e) => setNewPlaceholderName(e.target.value.replace(/[^a-zA-Z0-9_]/g, '_'))}
+                            />
+                            <Button type="submit" size="icon" disabled={!newPlaceholderName} className="h-8 w-8 rounded-lg shadow-sm shrink-0 bg-primary hover:bg-primary/90 text-white">
+                               <FontAwesomeIcon icon={faCheck} className="h-3 w-3" />
+                            </Button>
+                         </form>
+                      </div>
+                   </Card>
+                </div>
+              )}
               
               {/* PLACEHOLDER CHIP BAR */}
               <div className="bg-muted/50 border-t p-3 min-h-[60px] flex flex-wrap gap-2 items-center">
