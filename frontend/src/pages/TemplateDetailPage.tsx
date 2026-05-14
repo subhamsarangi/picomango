@@ -249,11 +249,13 @@ export default function TemplateDetailPage() {
               Prompt Blueprint
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-0 md:p-6">
             <div className="relative group">
-              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-2xl blur opacity-10 group-hover:opacity-20 transition-opacity"></div>
-              <p className="relative text-sm lg:text-base font-mono leading-relaxed text-foreground italic bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 p-6 rounded-2xl border border-indigo-100/50 shadow-inner">
-                "{template.raw_content}"
+              <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-none md:rounded-2xl blur opacity-10 group-hover:opacity-20 transition-opacity"></div>
+              <p className="relative text-sm lg:text-base font-mono leading-relaxed italic bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 p-4 md:p-8 rounded-none md:rounded-2xl border-y md:border border-indigo-100/50 shadow-inner">
+                <span className="inline-block bg-gradient-to-r from-indigo-950 via-purple-900 to-indigo-900 bg-clip-text text-transparent font-black tracking-tight">
+                  "{template.raw_content}"
+                </span>
               </p>
             </div>
           </CardContent>
