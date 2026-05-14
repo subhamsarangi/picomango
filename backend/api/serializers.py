@@ -63,11 +63,12 @@ class PromptTemplateSerializer(serializers.ModelSerializer):
     default_values = serializers.SerializerMethodField()
     next_template_title = serializers.CharField(source='next_template.title', read_only=True)
     full_chain = serializers.SerializerMethodField()
+    user_username = serializers.CharField(source='user.username', read_only=True)
 
     class Meta:
         model = PromptTemplate
         fields = '__all__'
-        read_only_fields = ('user', 'placeholders', 'created_at', 'item_count', 'is_root', 'item_thumbnails', 'default_values', 'next_template_title', 'full_chain')
+        read_only_fields = ('user', 'user_username', 'placeholders', 'created_at', 'item_count', 'is_root', 'item_thumbnails', 'default_values', 'next_template_title', 'full_chain')
 
     def get_full_chain(self, obj):
         # Traverse to find the root of the chain
@@ -134,11 +135,12 @@ class ItemSerializer(serializers.ModelSerializer):
     image_file = serializers.ImageField(write_only=True, required=True)
     duplicate_warning = serializers.SerializerMethodField(read_only=True)
     next_template = serializers.PrimaryKeyRelatedField(source='template.next_template', read_only=True)
+    user_username = serializers.CharField(source='user.username', read_only=True)
 
     class Meta:
         model = Item
         fields = '__all__'
-        read_only_fields = ('user', 'resolved_text', 'image_url', 'thumb_url', 'created_at', 'updated_at', 'duplicate_warning')
+        read_only_fields = ('user', 'user_username', 'resolved_text', 'image_url', 'thumb_url', 'created_at', 'updated_at', 'duplicate_warning')
 
     def get_duplicate_warning(self, obj):
         return getattr(obj, '_duplicate_warning', False)

@@ -23,6 +23,7 @@ import { faChevronDown } from '@fortawesome/free-solid-svg-icons/faChevronDown';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons/faChevronLeft';
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons/faChevronRight';
 import { faListCheck } from '@fortawesome/free-solid-svg-icons/faListCheck';
+import { faSitemap } from '@fortawesome/free-solid-svg-icons/faSitemap';
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -63,6 +64,7 @@ interface Template {
   full_chain?: { id: number; title: string }[];
   is_public: boolean;
   user: number;
+  user_username: string;
 }
 
 export default function TemplateDetailPage() {
@@ -255,8 +257,12 @@ export default function TemplateDetailPage() {
           </RouterLink>
           <div>
             <h1 className="text-3xl lg:text-4xl font-extrabold tracking-tight">{template.title}</h1>
-            <div className="text-muted-foreground mt-1 flex items-center gap-2">
-              <Badge variant="outline">Template ID: {template.id}</Badge>
+            <div className="text-muted-foreground mt-1 flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="bg-background">ID: {template.id}</Badge>
+              <Badge variant="outline" className="bg-background flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                Creator: <span className="text-foreground font-bold">{isOwner ? 'You' : (template.user_username || 'Unknown')}</span>
+              </Badge>
               <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">{items.length} Generations</Badge>
               <Badge variant={template.is_public ? "outline" : "secondary"} className={`gap-1.5 ${template.is_public ? 'text-emerald-600 border-emerald-200 bg-emerald-50' : 'text-amber-600 border-amber-200 bg-amber-50'}`}>
                 <FontAwesomeIcon icon={template.is_public ? faGlobe : faLock} className="h-2.5 w-2.5" />
@@ -412,9 +418,17 @@ export default function TemplateDetailPage() {
                       <h4 className={`font-bold text-xs md:text-sm leading-tight ${step.id === Number(id) ? 'text-primary' : 'group-hover:text-primary transition-colors'}`}>
                         {step.title}
                       </h4>
-                      <p className="text-[8px] md:text-[10px] text-muted-foreground mt-1 md:mt-2 uppercase tracking-widest font-bold">
-                        Step {index + 1}
-                      </p>
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[8px] md:text-[10px] text-muted-foreground mt-1 md:mt-2 uppercase tracking-widest font-bold">
+                          Step {index + 1}
+                        </p>
+                        {index === 0 && (
+                          <Badge variant="default" className="h-4 px-1.5 text-[8px] bg-primary/90 hover:bg-primary gap-1 shadow-sm uppercase font-black">
+                            <FontAwesomeIcon icon={faSitemap} className="h-1.5 w-1.5" />
+                            Root
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </RouterLink>
 

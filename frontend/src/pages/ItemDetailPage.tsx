@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import api from '@/api';
@@ -39,6 +39,7 @@ interface Item {
   placeholder_values: Record<string, string>;
   next_template: number | null;
   user: number;
+  user_username: string;
 }
 
 export default function ItemDetailPage() {
@@ -49,6 +50,10 @@ export default function ItemDetailPage() {
   const [item, setItem] = useState<Item | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isCopied, setIsCopied] = useState(false);
+
+  const isOwner = useMemo(() => {
+    return currentUser && item && item.user === currentUser.id;
+  }, [currentUser, item]);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -125,14 +130,20 @@ export default function ItemDetailPage() {
               className="w-full h-auto object-contain bg-zinc-900/5 max-h-[70vh]"
             />
           </div>
-          <div className="flex justify-between items-center text-[10px] text-muted-foreground font-mono px-2 uppercase tracking-tighter">
-            <div className="flex items-center gap-2">
-              <FontAwesomeIcon icon={faCalendarAlt} className="opacity-50" />
-              {item.created_at ? new Date(item.created_at).toLocaleString() : 'Date Unknown'}
+          <div className="flex flex-wrap justify-between items-center text-[10px] text-muted-foreground font-mono px-2 uppercase tracking-tighter gap-y-2">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <FontAwesomeIcon icon={faCalendarAlt} className="opacity-50" />
+                {item.created_at ? new Date(item.created_at).toLocaleString() : 'Date Unknown'}
+              </div>
+              <div className="flex items-center gap-2 border-l pl-4">
+                <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                Creator: <span className="text-foreground font-bold">{isOwner ? 'You' : (item.user_username || 'Unknown')}</span>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <FontAwesomeIcon icon={faHashtag} className="opacity-50" />
-              Reference ID: {item.id}
+              Ref ID: {item.id}
             </div>
           </div>
         </div>
