@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
+import { useHistory } from '@/hooks/useHistory';
 import * as diff from 'diff';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,19 +17,32 @@ import {
   faSpinner,
   faArrowLeft,
   faCircleCheck,
-  faTags
+  faTags,
+  faUndo,
+  faRedo
 } from '@fortawesome/free-solid-svg-icons';
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { faTrash } from '@fortawesome/free-solid-svg-icons/faTrash';
 
 export default function TemplateEditPage() {
   useDocumentTitle('Edit Template');
   const { id } = useParams();
   const navigate = useNavigate();
-  const [content, setContent] = useState('');
+  const [content, { set: setContent, undo, redo, canUndo, canRedo, reset: resetContent }] = useHistory('');
   const [originalContent, setOriginalContent] = useState('');
   const [title, setTitle] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [error, setError] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -48,7 +62,7 @@ export default function TemplateEditPage() {
     const fetchTemplate = async () => {
       try {
         const response = await api.get(`templates/${id}/`);
-        setContent(response.data.raw_content);
+        resetContent(response.data.raw_content);
         setOriginalContent(response.data.raw_content);
         setTitle(response.data.title || '');
       } catch (err) {
@@ -60,6 +74,26 @@ export default function TemplateEditPage() {
     };
     fetchTemplate();
   }, [id]);
+
+  // Keyboard shortcuts for Undo/Redo
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        if (e.shiftKey) {
+          e.preventDefault();
+          redo();
+        } else {
+          e.preventDefault();
+          undo();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+        e.preventDefault();
+        redo();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [undo, redo]);
 
   const diffResult = useMemo(() => {
     return diff.diffWordsWithSpace(originalContent, content);
@@ -88,6 +122,20 @@ export default function TemplateEditPage() {
       setError('Failed to save changes.');
     } finally {
       setIsSaving(false);
+    }
+  };
+  
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await api.delete(`templates/${id}/`);
+      navigate('/');
+    } catch (err) {
+      console.error(err);
+      setError('Failed to delete draft.');
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteDialog(false);
     }
   };
 
@@ -141,14 +189,25 @@ export default function TemplateEditPage() {
               disabled={isSaving}
             />
           </div>
-          <Button onClick={handleSave} disabled={isSaving || !title} className="gap-2 h-10 px-6 font-bold shadow-lg">
-            {isSaving ? (
-              <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
-            ) : (
-              <FontAwesomeIcon icon={faSave} />
-            )}
-            Save & Lock
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDeleteDialog(true)} 
+              disabled={isSaving || isDeleting} 
+              className="h-10 px-4 font-bold border-destructive/30 text-destructive hover:bg-destructive/10"
+            >
+              <FontAwesomeIcon icon={faTrash} className="mr-2" />
+              Discard
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving || isDeleting || !title} className="gap-2 h-10 px-6 font-bold shadow-lg">
+              {isSaving ? (
+                <FontAwesomeIcon icon={faSpinner} className="animate-spin" />
+              ) : (
+                <FontAwesomeIcon icon={faSave} />
+              )}
+              Save & Lock
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -174,9 +233,33 @@ export default function TemplateEditPage() {
           {/* EDITOR PANE */}
           <Card className="shadow-lg border-primary/10 flex flex-col min-h-0 overflow-hidden">
             <CardHeader className="bg-primary/5 py-2 px-3 flex-none border-b">
-              <CardTitle className="text-sm font-bold flex items-center gap-2 uppercase tracking-tighter opacity-70">
-                <FontAwesomeIcon icon={faPenNib} className="h-3 w-3" />
-                Raw Content
+              <CardTitle className="text-sm font-bold flex items-center justify-between w-full uppercase tracking-tighter opacity-70">
+                <div className="flex items-center gap-2">
+                  <FontAwesomeIcon icon={faPenNib} className="h-3 w-3" />
+                  Raw Content
+                </div>
+                <div className="flex items-center gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6" 
+                    disabled={!canUndo} 
+                    onClick={undo}
+                    title="Undo (Ctrl+Z)"
+                  >
+                    <FontAwesomeIcon icon={faUndo} className="h-2.5 w-2.5" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-6 w-6" 
+                    disabled={!canRedo} 
+                    onClick={redo}
+                    title="Redo (Ctrl+Y)"
+                  >
+                    <FontAwesomeIcon icon={faRedo} className="h-2.5 w-2.5" />
+                  </Button>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0 flex-1 flex flex-col min-h-0">
@@ -241,6 +324,36 @@ export default function TemplateEditPage() {
 
         </div>
       </div>
+
+      {/* DELETE CONFIRMATION DIALOG */}
+      <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <DialogContent className="rounded-3xl max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center gap-3 text-destructive">
+              <FontAwesomeIcon icon={faTrash} />
+              Discard Draft
+            </DialogTitle>
+            <DialogDescription className="text-base py-4">
+              Are you sure you want to discard this template draft? 
+              <br/><br/>
+              This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setShowDeleteDialog(false)} className="h-12 flex-1 font-bold">
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              className="h-12 flex-1 font-bold shadow-lg"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? <FontAwesomeIcon icon={faSpinner} className="animate-spin" /> : 'Yes, Discard Draft'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
