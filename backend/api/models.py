@@ -24,6 +24,13 @@ class PromptTemplate(models.Model):
         on_delete=models.CASCADE,
         related_name='templates'
     )
+    next_template = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='previous_templates'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

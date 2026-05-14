@@ -4,10 +4,13 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import api from '@/api';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faSpinner } from '@fortawesome/free-solid-svg-icons/faSpinner';
 import { faPlus } from '@fortawesome/free-solid-svg-icons/faPlus';
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons/faArrowLeft';
+import { faArrowRight } from '@fortawesome/free-solid-svg-icons/faArrowRight';
+import { faLink } from '@fortawesome/free-solid-svg-icons/faLink';
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons/faLayerGroup';
 import { faImage } from '@fortawesome/free-solid-svg-icons/faImage';
 import { faEye } from '@fortawesome/free-solid-svg-icons/faEye';
@@ -48,6 +51,8 @@ interface Template {
   raw_content: string;
   is_locked: boolean;
   placeholders: string[];
+  next_template: number | null;
+  next_template_title?: string;
 }
 
 export default function TemplateDetailPage() {
@@ -64,6 +69,18 @@ export default function TemplateDetailPage() {
   const [isConfirm1Open, setIsConfirm1Open] = useState(false);
   const [isConfirm2Open, setIsConfirm2Open] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Chaining States
+  const [isLinkDialogOpen, setIsLinkDialogOpen] = useState(false);
+  const [allTemplates, setAllTemplates] = useState<Template[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLinking, setIsLinking] = useState(false);
+
+  const filteredTemplates = useMemo(() => {
+    return allTemplates
+      .filter(t => (t.title || '').toLowerCase().includes(searchTerm.toLowerCase()))
+      .slice(0, 5);
+  }, [allTemplates, searchTerm]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -114,6 +131,30 @@ export default function TemplateDetailPage() {
       alert('Failed to delete template.');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const fetchAllTemplates = async () => {
+    try {
+      const res = await api.get('templates/');
+      const data = res.data.results !== undefined ? res.data.results : res.data;
+      setAllTemplates(data.filter((t: Template) => t.id !== Number(id)));
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleLinkTemplate = async (targetId: number) => {
+    setIsLinking(true);
+    try {
+      await api.patch(`templates/${id}/`, { next_template: targetId });
+      // Refresh
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to link template.');
+    } finally {
+      setIsLinking(false);
     }
   };
 
@@ -220,9 +261,100 @@ export default function TemplateDetailPage() {
              </Accordion>
           </CardContent>
         </Card>
+
+        {/* TEMPLATE CHAINING */}
+        <Card className="border-primary/10 shadow-lg lg:col-span-3">
+          <CardHeader className="py-4 px-6 border-b bg-indigo-50/50 dark:bg-indigo-950/20">
+            <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-indigo-500 flex items-center gap-2">
+              <FontAwesomeIcon icon={faLink} className="h-3 w-3" />
+              Prompt Chain
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="flex items-center gap-8 overflow-x-auto pb-4">
+              {/* CURRENT NODE */}
+              <div className="flex-none w-64 p-4 rounded-2xl border-2 border-primary/20 bg-primary/5 shadow-sm relative">
+                <Badge className="absolute -top-3 left-4 bg-primary">Current Step</Badge>
+                <h4 className="font-bold truncate">{template.title}</h4>
+                <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider font-bold">1st Step</p>
+              </div>
+
+              {/* ARROW */}
+              <div className="flex-none text-muted-foreground animate-pulse">
+                <FontAwesomeIcon icon={faArrowRight} className="h-6 w-6" />
+              </div>
+
+              {/* NEXT NODE */}
+              {template.next_template ? (
+                <RouterLink to={`/templates/${template.next_template}`} className="flex-none group">
+                  <div className="w-64 p-4 rounded-2xl border border-primary/10 bg-background shadow-sm group-hover:border-primary/30 group-hover:shadow-md transition-all">
+                    <h4 className="font-bold truncate group-hover:text-primary transition-colors">
+                      {template.next_template_title || `Template ${template.next_template}`}
+                    </h4>
+                    <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider font-bold">Next Step</p>
+                  </div>
+                </RouterLink>
+              ) : (
+                <div className="flex-none w-64 p-6 rounded-2xl border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center gap-3 bg-muted/5">
+                   <p className="text-xs text-muted-foreground font-medium">Chain ends here</p>
+                   <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-8 text-[10px] font-bold gap-2"
+                    onClick={() => { fetchAllTemplates(); setIsLinkDialogOpen(true); }}
+                   >
+                     <FontAwesomeIcon icon={faPlus} className="h-2 w-2" />
+                     Link Next Template
+                   </Button>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* ITEMS GALLERY */}
+      {/* LINK TEMPLATE DIALOG */}
+      <Dialog open={isLinkDialogOpen} onOpenChange={setIsLinkDialogOpen}>
+        <DialogContent className="rounded-3xl max-w-lg max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Link Next Template</DialogTitle>
+            <DialogDescription>
+              Choose which template should follow "{template.title}" in the chain.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="px-1 py-3">
+            <Input 
+              placeholder="Search templates..." 
+              value={searchTerm} 
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="rounded-xl border-primary/20"
+            />
+          </div>
+          <div className="flex-1 overflow-y-auto my-4 pr-2">
+            <div className="grid gap-2">
+              {filteredTemplates.length === 0 ? (
+                <p className="text-center py-8 text-muted-foreground italic">No templates found.</p>
+              ) : (
+                filteredTemplates.map(t => (
+                  <Button 
+                    key={t.id} 
+                    variant="ghost" 
+                    className="justify-start h-16 border border-primary/5 hover:border-primary/20 hover:bg-primary/5 px-4 rounded-xl"
+                    onClick={() => handleLinkTemplate(t.id)}
+                    disabled={isLinking}
+                  >
+                    <div className="text-left">
+                      <div className="font-bold truncate">{t.title || 'Untitled'}</div>
+                      <div className="text-[10px] text-muted-foreground uppercase">ID: {t.id}</div>
+                    </div>
+                  </Button>
+                ))
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
       <div className="mb-6">
         <h2 className="text-2xl font-bold flex items-center gap-3">
           <FontAwesomeIcon icon={faImage} className="text-primary h-5 w-5" />

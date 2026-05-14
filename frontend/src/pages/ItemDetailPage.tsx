@@ -16,7 +16,8 @@ import {
   faTrash,
   faCopy,
   faCheck,
-  faPlus
+  faPlus,
+  faArrowRight
 } from '@fortawesome/free-solid-svg-icons';
 import { Badge } from "@/components/ui/badge";
 import Loader from '@/components/Loader';
@@ -29,6 +30,7 @@ interface Item {
   thumb_url: string;
   created_at: string;
   placeholder_values: Record<string, string>;
+  next_template: number | null;
 }
 
 export default function ItemDetailPage() {
@@ -178,6 +180,14 @@ export default function ItemDetailPage() {
           </Card>
 
           <div className="pt-4 flex flex-col gap-3">
+             {item.next_template && (
+               <RouterLink to={`/templates/${item.next_template}/new-item`}>
+                  <Button className="w-full h-14 text-lg font-bold bg-indigo-600 hover:bg-indigo-700 shadow-lg gap-3">
+                    <FontAwesomeIcon icon={faArrowRight} />
+                    Continue Chain
+                  </Button>
+               </RouterLink>
+             )}
              <RouterLink to={`/templates/${item.template}`}>
                 <Button variant="secondary" className="w-full h-14 text-lg font-bold border hover:bg-primary/5 gap-3">
                    <FontAwesomeIcon icon={faLayerGroup} />

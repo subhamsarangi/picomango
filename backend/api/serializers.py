@@ -60,11 +60,12 @@ class PromptTemplateSerializer(serializers.ModelSerializer):
     item_count = serializers.IntegerField(source='annotated_item_count', read_only=True)
     item_thumbnails = serializers.SerializerMethodField()
     default_values = serializers.SerializerMethodField()
+    next_template_title = serializers.CharField(source='next_template.title', read_only=True)
 
     class Meta:
         model = PromptTemplate
         fields = '__all__'
-        read_only_fields = ('user', 'placeholders', 'created_at', 'item_count', 'item_thumbnails', 'default_values')
+        read_only_fields = ('user', 'placeholders', 'created_at', 'item_count', 'item_thumbnails', 'default_values', 'next_template_title')
 
     def get_default_values(self, obj):
         if obj.origin_item:
@@ -76,7 +77,9 @@ class PromptTemplateSerializer(serializers.ModelSerializer):
     def validate(self, data):
         user = self.context['request'].user
         if self.instance and self.instance.is_locked:
-            raise serializers.ValidationError("Cannot edit a locked template.")
+            # Only forbid changing the core prompt blueprint
+            if 'raw_content' in data:
+                raise serializers.ValidationError("Cannot edit the raw content of a locked template.")
         
         copied_from = data.get('copied_from')
         if copied_from and copied_from.user != user:
@@ -100,6 +103,7 @@ class PromptTemplateSerializer(serializers.ModelSerializer):
 class ItemSerializer(serializers.ModelSerializer):
     image_file = serializers.ImageField(write_only=True, required=True)
     duplicate_warning = serializers.SerializerMethodField(read_only=True)
+    next_template = serializers.PrimaryKeyRelatedField(source='template.next_template', read_only=True)
 
     class Meta:
         model = Item
