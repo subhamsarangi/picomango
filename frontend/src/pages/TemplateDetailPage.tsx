@@ -175,6 +175,22 @@ export default function TemplateDetailPage() {
     }
   };
 
+  // Scroll current step into view on load
+  useEffect(() => {
+    if (template?.full_chain && scrollRef.current) {
+      setTimeout(() => {
+        const currentStepEl = scrollRef.current?.querySelector('[data-current="true"]');
+        if (currentStepEl) {
+          currentStepEl.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'center'
+          });
+        }
+      }, 500); // Wait for animation/render
+    }
+  }, [template?.id, template?.full_chain]);
+
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
       const scrollAmount = direction === 'left' ? -300 : 300;
@@ -325,7 +341,11 @@ export default function TemplateDetailPage() {
               {template.full_chain?.map((step, index) => (
                 <div key={step.id} className="flex items-center gap-4 flex-none">
                   {/* STEP NODE */}
-                  <RouterLink to={`/templates/${step.id}`} className="group relative">
+                  <RouterLink 
+                    to={`/templates/${step.id}`} 
+                    className="group relative"
+                    data-current={step.id === Number(id)}
+                  >
                     <div className={`w-36 md:w-48 min-h-[100px] p-3 md:p-4 rounded-xl border-2 transition-all duration-300 flex flex-col justify-center ${
                       step.id === Number(id) 
                         ? 'border-primary bg-primary/5 shadow-lg scale-105 z-10' 
