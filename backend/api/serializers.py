@@ -62,11 +62,36 @@ class PromptTemplateSerializer(serializers.ModelSerializer):
     item_thumbnails = serializers.SerializerMethodField()
     default_values = serializers.SerializerMethodField()
     next_template_title = serializers.CharField(source='next_template.title', read_only=True)
+    full_chain = serializers.SerializerMethodField()
 
     class Meta:
         model = PromptTemplate
         fields = '__all__'
-        read_only_fields = ('user', 'placeholders', 'created_at', 'item_count', 'is_root', 'item_thumbnails', 'default_values', 'next_template_title')
+        read_only_fields = ('user', 'placeholders', 'created_at', 'item_count', 'is_root', 'item_thumbnails', 'default_values', 'next_template_title', 'full_chain')
+
+    def get_full_chain(self, obj):
+        # Traverse to find the root of the chain
+        root = obj
+        visited = {root.id}
+        while True:
+            parent = PromptTemplate.objects.filter(next_template=root).first()
+            if not parent or parent.id in visited:
+                break
+            root = parent
+            visited.add(root.id)
+        
+        # Traverse from root to the end
+        chain = []
+        curr = root
+        visited = set()
+        while curr and curr.id not in visited:
+            chain.append({
+                'id': curr.id,
+                'title': curr.title or f"Template {curr.id}"
+            })
+            visited.add(curr.id)
+            curr = curr.next_template
+        return chain
 
     def get_is_root(self, obj):
         # annotated_parent_count comes from the ViewSet's get_queryset

@@ -54,6 +54,7 @@ interface Template {
   placeholders: string[];
   next_template: number | null;
   next_template_title?: string;
+  full_chain?: { id: number; title: string }[];
 }
 
 export default function TemplateDetailPage() {
@@ -272,50 +273,64 @@ export default function TemplateDetailPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="flex items-center gap-8 overflow-x-auto pb-4">
-              {/* CURRENT NODE */}
-              <div className="flex-none w-64 p-4 rounded-2xl border-2 border-primary/20 bg-primary/5 shadow-sm relative">
-                <Badge className="absolute -top-3 left-4 bg-primary">Current Step</Badge>
-                <h4 className="font-bold truncate">{template.title}</h4>
-                <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider font-bold">1st Step</p>
-              </div>
+            <div className="flex items-center gap-4 overflow-x-auto pt-6 pb-4 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
+              {template.full_chain?.map((step, index) => (
+                <div key={step.id} className="flex items-center gap-4 flex-none">
+                  {/* STEP NODE */}
+                  <RouterLink to={`/templates/${step.id}`} className="group relative">
+                    <div className={`w-64 min-h-[140px] p-6 rounded-2xl border-2 transition-all duration-300 flex flex-col justify-center ${
+                      step.id === Number(id) 
+                        ? 'border-primary bg-primary/5 shadow-lg scale-105 z-10' 
+                        : 'border-primary/10 bg-background hover:border-primary/30 hover:shadow-md'
+                    }`}>
+                      {step.id === Number(id) && (
+                        <Badge className="absolute -top-3 left-4 bg-primary animate-bounce shadow-md">Current Step</Badge>
+                      )}
+                      <h4 className={`font-bold text-lg leading-tight ${step.id === Number(id) ? 'text-primary' : 'group-hover:text-primary transition-colors'}`}>
+                        {step.title}
+                      </h4>
+                      <p className="text-[10px] text-muted-foreground mt-2 uppercase tracking-widest font-bold">
+                        {index + 1}{index === 0 ? 'st' : index === 1 ? 'nd' : index === 2 ? 'rd' : 'th'} Step
+                      </p>
+                    </div>
+                  </RouterLink>
 
-              {/* ARROW */}
-              <div className="flex-none text-muted-foreground animate-pulse">
-                <FontAwesomeIcon icon={faArrowRight} className="h-6 w-6" />
-              </div>
+                  {/* ARROW (if not last) */}
+                  {index < (template.full_chain?.length || 0) - 1 && (
+                    <div className="text-muted-foreground/30">
+                      <FontAwesomeIcon icon={faArrowRight} className="h-5 w-5" />
+                    </div>
+                  )}
+                </div>
+              ))}
 
-              {/* NEXT NODE */}
-              {template.next_template ? (
-                <RouterLink to={`/templates/${template.next_template}`} className="flex-none group">
-                  <div className="w-64 p-4 rounded-2xl border border-primary/10 bg-background shadow-sm group-hover:border-primary/30 group-hover:shadow-md transition-all">
-                    <h4 className="font-bold truncate group-hover:text-primary transition-colors">
-                      {template.next_template_title || `Template ${template.next_template}`}
-                    </h4>
-                    <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-wider font-bold">Next Step</p>
+              {/* ACTION BUTTONS (Only show at the end of the chain) */}
+              {!template.next_template && (
+                <div className="flex items-center gap-4 flex-none ml-4">
+                  <div className="text-muted-foreground/30">
+                    <FontAwesomeIcon icon={faArrowRight} className="h-5 w-5" />
                   </div>
-                </RouterLink>
-              ) : (
-                <div className="flex flex-none gap-4">
-                  <div 
-                    className="w-64 p-6 rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-3 bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer group"
-                    onClick={() => navigate(`/items/new`, { state: { linkPrev: id } })}
-                  >
-                    <FontAwesomeIcon icon={faWandMagicSparkles} className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
-                    <p className="text-xs text-primary font-bold uppercase tracking-widest">Create New Step</p>
-                  </div>
-
-                  <div className="w-64 p-6 rounded-2xl border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center gap-3 bg-muted/5">
-                    <p className="text-xs text-muted-foreground font-medium">Chain ends here</p>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-8 text-[10px] font-bold gap-2"
-                      onClick={() => { fetchAllTemplates(); setIsLinkDialogOpen(true); }}
+                  <div className="flex gap-4">
+                    <div 
+                      className="w-64 min-h-[140px] p-6 rounded-2xl border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-3 bg-primary/5 hover:bg-primary/10 transition-all cursor-pointer group"
+                      onClick={() => navigate(`/items/new`, { state: { linkPrev: id } })}
                     >
-                      <FontAwesomeIcon icon={faPlus} className="h-2 w-2" />
-                      Link Existing
-                    </Button>
+                      <FontAwesomeIcon icon={faWandMagicSparkles} className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
+                      <p className="text-xs text-primary font-bold uppercase tracking-widest">Create New Step</p>
+                    </div>
+
+                    <div className="w-64 min-h-[140px] p-6 rounded-2xl border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center gap-3 bg-muted/5">
+                      <p className="text-xs text-muted-foreground font-medium">Chain ends here</p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="h-8 text-[10px] font-bold gap-2"
+                        onClick={() => { fetchAllTemplates(); setIsLinkDialogOpen(true); }}
+                      >
+                        <FontAwesomeIcon icon={faPlus} className="h-2 w-2" />
+                        Link Existing
+                      </Button>
+                    </div>
                   </div>
                 </div>
               )}
