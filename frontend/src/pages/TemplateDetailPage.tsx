@@ -80,12 +80,24 @@ export default function TemplateDetailPage() {
   const [allTemplates, setAllTemplates] = useState<Template[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLinking, setIsLinking] = useState(false);
+  const [modalPage, setModalPage] = useState(1);
+  const MODAL_PAGE_SIZE = 5;
 
   const filteredTemplates = useMemo(() => {
     return allTemplates
-      .filter(t => (t.title || '').toLowerCase().includes(searchTerm.toLowerCase()))
-      .slice(0, 5);
+      .filter(t => (t.title || '').toLowerCase().includes(searchTerm.toLowerCase()));
   }, [allTemplates, searchTerm]);
+
+  const paginatedModalTemplates = useMemo(() => {
+    const start = (modalPage - 1) * MODAL_PAGE_SIZE;
+    return filteredTemplates.slice(start, start + MODAL_PAGE_SIZE);
+  }, [filteredTemplates, modalPage]);
+
+  const totalModalPages = Math.max(1, Math.ceil(filteredTemplates.length / MODAL_PAGE_SIZE));
+
+  useEffect(() => {
+    setModalPage(1);
+  }, [searchTerm]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -392,12 +404,12 @@ export default function TemplateDetailPage() {
               className="rounded-xl border-primary/20"
             />
           </div>
-          <div className="flex-1 overflow-y-auto my-4 pr-2">
+          <div className="flex-1 overflow-y-auto my-4 pr-2 min-h-[320px]">
             <div className="grid gap-2">
-              {filteredTemplates.length === 0 ? (
+              {paginatedModalTemplates.length === 0 ? (
                 <p className="text-center py-8 text-muted-foreground italic">No templates found.</p>
               ) : (
-                filteredTemplates.map(t => (
+                paginatedModalTemplates.map(t => (
                   <Button 
                     key={t.id} 
                     variant="ghost" 
@@ -414,6 +426,33 @@ export default function TemplateDetailPage() {
               )}
             </div>
           </div>
+          <DialogFooter className="flex flex-row justify-between items-center border-t pt-4">
+            <div className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
+              Page {modalPage} of {totalModalPages}
+            </div>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 px-3 text-[10px] font-bold gap-1"
+                onClick={() => setModalPage(p => Math.max(1, p - 1))}
+                disabled={modalPage === 1}
+              >
+                <FontAwesomeIcon icon={faChevronLeft} className="h-2 w-2" />
+                Prev
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 px-3 text-[10px] font-bold gap-1"
+                onClick={() => setModalPage(p => Math.min(totalModalPages, p + 1))}
+                disabled={modalPage === totalModalPages}
+              >
+                Next
+                <FontAwesomeIcon icon={faChevronRight} className="h-2 w-2" />
+              </Button>
+            </div>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
       <div className="mb-6">
