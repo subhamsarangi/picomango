@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { compressImage } from '@/lib/imageCompression';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -23,15 +24,16 @@ export default function NewItemScratchPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
+      const compressedFile = await compressImage(file);
+      setImageFile(compressedFile);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(compressedFile);
     }
   };
 
@@ -82,9 +84,9 @@ export default function NewItemScratchPage() {
               <CardHeader className="bg-primary/5 py-3 lg:py-4 flex-none">
                 <CardTitle className="text-lg flex items-center gap-2">
                   <FontAwesomeIcon icon={faImage} className="text-primary h-4 w-4" />
-                  Media Upload
+                  Example Output
                 </CardTitle>
-                <CardDescription>Upload the visual for this item</CardDescription>
+                <CardDescription>Upload your file</CardDescription>
               </CardHeader>
               <CardContent className="p-4 flex-1 flex flex-col min-h-0">
                 <div className="space-y-2 flex-1 flex flex-col min-h-0">
