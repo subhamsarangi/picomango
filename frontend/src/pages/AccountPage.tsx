@@ -10,10 +10,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
   faUser, 
   faEnvelope, 
-  faCalendarAlt, 
   faRightFromBracket,
-  faShieldHalved,
-  faFingerprint
+  faShieldHalved
 } from '@fortawesome/free-solid-svg-icons';
 import Loader from '@/components/Loader';
 

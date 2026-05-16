@@ -3,7 +3,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import api from '@/api';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons/faPlus';
@@ -11,9 +11,7 @@ import { faSpinner } from '@fortawesome/free-solid-svg-icons/faSpinner';
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons/faLayerGroup';
 import { faPenToSquare } from '@fortawesome/free-solid-svg-icons/faPenToSquare';
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons/faChevronRight';
-import { faCircleCheck } from '@fortawesome/free-solid-svg-icons/faCircleCheck';
 import { faLock } from '@fortawesome/free-solid-svg-icons/faLock';
-import { faGlobe } from '@fortawesome/free-solid-svg-icons/faGlobe';
 import { faTrash } from '@fortawesome/free-solid-svg-icons/faTrash';
 import { faSitemap } from '@fortawesome/free-solid-svg-icons/faSitemap';
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { faSearch } from '@fortawesome/free-solid-svg-icons/faSearch';
-import { faFilter } from '@fortawesome/free-solid-svg-icons/faFilter';
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons/faChevronDown';
 import {
   Dialog,
   DialogContent,

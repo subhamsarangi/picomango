@@ -3,13 +3,11 @@ import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import api from '@/api';
 import { useAuth } from '@/context/AuthContext';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { 
-  faSpinner, 
   faArrowLeft, 
-  faDownload,
   faCalendarAlt,
   faHashtag,
   faLayerGroup,
@@ -20,7 +18,6 @@ import {
   faPlus,
   faArrowRight
 } from '@fortawesome/free-solid-svg-icons';
-import { Badge } from "@/components/ui/badge";
 import Loader from '@/components/Loader';
 import {
   Accordion,

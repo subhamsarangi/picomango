@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useHistory } from '@/hooks/useHistory';
 import * as diff from 'diff';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -147,7 +147,7 @@ export default function TemplateEditPage() {
 
       // Mirror Div calculation for positioning
       const textarea = textareaRef.current;
-      const { offsetLeft, offsetTop, scrollLeft, scrollTop } = textarea;
+      const { scrollLeft, scrollTop } = textarea;
       const styles = window.getComputedStyle(textarea);
       
       const mirror = document.createElement('div');
@@ -171,8 +171,8 @@ export default function TemplateEditPage() {
       mirror.appendChild(span);
       document.body.appendChild(mirror);
       
-      const rect = span.getBoundingClientRect();
-      const mirrorRect = mirror.getBoundingClientRect();
+      // const rect = span.getBoundingClientRect();
+      // const mirrorRect = mirror.getBoundingClientRect();
       
       // Calculate position relative to textarea
       // We want it slightly above the selection

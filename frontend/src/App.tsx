@@ -1,14 +1,11 @@
 import { lazy, Suspense } from 'react'
-import { Routes, Route, Link as RouterLink, useLocation, useNavigate, Navigate } from 'react-router-dom'
+import { Routes, Route, Link as RouterLink, useLocation, Navigate } from 'react-router-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faLeaf } from '@fortawesome/free-solid-svg-icons/faLeaf'
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons/faLayerGroup'
 import { faPlusCircle } from '@fortawesome/free-solid-svg-icons/faPlusCircle'
-import { faList } from '@fortawesome/free-solid-svg-icons/faList'
-import { faRightFromBracket } from '@fortawesome/free-solid-svg-icons/faRightFromBracket'
 import { faRightToBracket } from '@fortawesome/free-solid-svg-icons/faRightToBracket'
 import { faUser } from '@fortawesome/free-solid-svg-icons/faUser'
-import { faSpinner } from '@fortawesome/free-solid-svg-icons/faSpinner'
 import { Button } from "@/components/ui/button"
 import { useAuth } from './context/AuthContext'
 import Loader from './components/Loader'
@@ -35,13 +32,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated } = useAuth();
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+
 
   const navItems = [
     { name: 'Library', path: '/', icon: faLayerGroup, public: true },
