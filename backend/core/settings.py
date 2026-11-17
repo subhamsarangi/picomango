@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from django.core.exceptions import ImproperlyConfigured
 
 load_dotenv()
 
@@ -92,16 +93,21 @@ DATABASES = {
     },
 }
 
-# Add production entry for migration scripts if URL is available
-if os.environ.get('NEON_DB_URL'):
+# Add production entry for migration scripts if a database URL is available.
+database_url = os.environ.get('NEON_DB_URL') or os.environ.get('DATABASE_URL')
+if database_url:
     DATABASES['production'] = dj_database_url.parse(
-        os.environ.get('NEON_DB_URL'),
+        database_url,
         conn_max_age=600,
         ssl_require=True,
     )
 
 if ENVIRONMENT == 'production':
-    DATABASES['default'] = DATABASES.get('production', DATABASES['default'])
+    if 'production' not in DATABASES:
+        raise ImproperlyConfigured(
+            'Set DATABASE_URL (or NEON_DB_URL) when ENVIRONMENT is production.'
+        )
+    DATABASES['default'] = DATABASES['production']
 
 
 

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import axios from 'axios';
 import { Link as RouterLink } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import api from '@/api';
@@ -58,6 +59,13 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
+  const [apiError, setApiError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!apiError) return;
+    const timeout = window.setTimeout(() => setApiError(null), 6000);
+    return () => window.clearTimeout(timeout);
+  }, [apiError]);
 
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -79,6 +87,13 @@ export default function Home() {
         setTotalCount(response.data.count || results.length);
       } catch (err) {
         console.error(err);
+        setApiError(
+          axios.isAxiosError(err)
+            ? err.response
+              ? `Unable to load templates (HTTP ${err.response.status}).`
+              : 'Unable to connect to the server. Check your connection and try again.'
+            : 'Unable to load templates. Please try again.'
+        );
       } finally {
         setIsLoading(false);
         setIsMoreLoading(false);
@@ -118,6 +133,21 @@ export default function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-1 lg:px-4">
+      {apiError && (
+        <div
+          role="alert"
+          className="fixed right-4 top-20 z-[100] flex max-w-sm items-start gap-4 rounded-lg border border-destructive/30 bg-background p-4 text-foreground shadow-lg"
+        >
+          <p className="flex-1 text-sm">{apiError}</p>
+          <button
+            type="button"
+            className="text-sm font-medium text-muted-foreground hover:text-foreground"
+            onClick={() => setApiError(null)}
+          >
+            Dismiss
+          </button>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight text-center md:text-left">Template Library</h1>

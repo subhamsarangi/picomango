@@ -14,13 +14,14 @@ from django.db import connections
 def migrate():
     """
     Copies all data from 'default' (local sqlite) to 'production' (Neon Postgres).
-    Assumes you have added a 'production' entry in settings.py or provided NEON_DB_URL.
+    Assumes you have added a 'production' entry in settings.py or provided
+    DATABASE_URL / NEON_DB_URL.
     """
     
     # Check if production database is configured
     if 'production' not in connections:
         print("ERROR: 'production' database not found in connections.")
-        print("Please ensure NEON_DB_URL is set in your .env or production DB is added to settings.py.")
+        print("Please ensure DATABASE_URL or NEON_DB_URL is set, or add the production DB to settings.py.")
         return
 
     local_db = 'default'
