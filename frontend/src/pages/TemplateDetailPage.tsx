@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link as RouterLink, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import api from '@/api';
 import { useAuth } from '@/context/AuthContext';
@@ -70,9 +71,10 @@ export default function TemplateDetailPage() {
   const navigate = useNavigate();
   const { user: currentUser, isAuthenticated } = useAuth();
   const [template, setTemplate] = useState<Template | null>(null);
+  const [isNotFound, setIsNotFound] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   
-  useDocumentTitle(template?.title || 'Loading Template...');
+  useDocumentTitle(isNotFound ? 'Page Not Found' : template?.title || 'Loading Template...');
   const [items, setItems] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
@@ -134,17 +136,27 @@ export default function TemplateDetailPage() {
     const fetchData = async () => {
       setIsLoading(true);
       setError('');
+      setIsNotFound(false);
+      let templateLoaded = false;
       try {
-        const [tplRes, itemsRes] = await Promise.all([
-          api.get(`templates/${id}/`),
-          api.get(`items/`, { params: { template: id } })
-        ]);
+        const tplRes = await api.get(`templates/${id}/`);
+        templateLoaded = true;
         setTemplate(tplRes.data);
+        const itemsRes = await api.get(`items/`, { params: { template: id } });
         const itemsData = itemsRes.data.results !== undefined ? itemsRes.data.results : itemsRes.data;
         setItems(itemsData);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error(err);
-        setError(err.response?.data?.detail || 'Failed to connect to the server.');
+        if (
+          !templateLoaded &&
+          axios.isAxiosError(err) &&
+          err.response?.status === 404
+        ) {
+          setIsNotFound(true);
+        } else {
+          const detail = axios.isAxiosError(err) ? err.response?.data?.detail : null;
+          setError(typeof detail === 'string' ? detail : 'Failed to connect to the server.');
+        }
       } finally {
         setIsLoading(false);
       }
@@ -230,6 +242,19 @@ export default function TemplateDetailPage() {
   };
 
   if (isLoading) return <Loader message="Analyzing template ecosystem..." />;
+
+  if (isNotFound) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+        <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">404</p>
+        <h1 className="text-3xl font-bold">Template not found</h1>
+        <p className="text-muted-foreground">This template may have been removed or the link may be incorrect.</p>
+        <RouterLink to="/">
+          <Button variant="outline">Back to Library</Button>
+        </RouterLink>
+      </div>
+    );
+  }
 
   if (error) {
     return (
