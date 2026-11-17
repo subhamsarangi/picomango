@@ -165,6 +165,23 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 15
 }
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}
+
 from datetime import timedelta
 
 SIMPLE_JWT = {

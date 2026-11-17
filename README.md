@@ -36,6 +36,7 @@ This project is designed to be deployed separately using the **Root Directory** 
    - `DATABASE_URL`: Your Postgres URL.
    - `ENVIRONMENT`: `production`.
    - `CLOUDINARY_*`: For image storage.
+6. After configuring the database, run `python manage.py migrate` from the backend service shell to create/update database tables.
 
 ### Frontend (Vercel)
 1. Create a project on Vercel.
