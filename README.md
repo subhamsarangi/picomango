@@ -31,12 +31,12 @@ This project is designed to be deployed separately using the **Root Directory** 
 1. Create a **Web Service** on Render.
 2. Set **Root Directory** to `backend`.
 3. Set **Build Command**: `uv export -f requirements.txt -o requirements.txt && pip install -r requirements.txt` (or just `pip install -r requirements.txt` if file exists).
-4. Set **Start Command**: `gunicorn core.wsgi:application`.
+4. Set **Start Command**: `python manage.py migrate --noinput && gunicorn core.wsgi:application`.
 5. Add Environment Variables:
    - `DATABASE_URL`: Your Postgres URL.
    - `ENVIRONMENT`: `production`.
    - `CLOUDINARY_*`: For image storage.
-6. After configuring the database, run `python manage.py migrate` from the backend service shell to create/update database tables.
+   The Start Command applies database migrations automatically before launching the server.
 
 ### Frontend (Vercel)
 1. Create a project on Vercel.
@@ -44,6 +44,16 @@ This project is designed to be deployed separately using the **Root Directory** 
 3. Vercel will auto-detect Vite.
 4. Add Environment Variable:
    - `VITE_API_URL`: Your Render backend URL (e.g., `https://api.picomango.com/api/`).
+
+### Migrate one user to production
+From `backend`, keep `ENVIRONMENT=development` so the source remains local SQLite, and configure `DATABASE_URL` or `NEON_DB_URL` with the production PostgreSQL URL. The command performs a dry run by default:
+
+```bash
+python migrate_user_to_prod.py --email user@example.com
+python migrate_user_to_prod.py --email user@example.com --apply
+```
+
+The script copies the account if it is not already in production, plus that user's templates and items. It does not overwrite conflicting production records. Image and thumbnail URLs are copied; the files themselves remain in Cloudinary.
 
 ## Running Tests
 
