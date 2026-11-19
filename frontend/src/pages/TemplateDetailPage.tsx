@@ -14,6 +14,8 @@ import { faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons/faWandMag
 import { faArrowLeft } from '@fortawesome/free-solid-svg-icons/faArrowLeft';
 import { faArrowRight } from '@fortawesome/free-solid-svg-icons/faArrowRight';
 import { faLink } from '@fortawesome/free-solid-svg-icons/faLink';
+import { faCopy } from '@fortawesome/free-solid-svg-icons/faCopy';
+import { faCheck } from '@fortawesome/free-solid-svg-icons/faCheck';
 import { faLayerGroup } from '@fortawesome/free-solid-svg-icons/faLayerGroup';
 import { faImage } from '@fortawesome/free-solid-svg-icons/faImage';
 import { faTrash } from '@fortawesome/free-solid-svg-icons/faTrash';
@@ -78,6 +80,7 @@ export default function TemplateDetailPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isBlueprintCopied, setIsBlueprintCopied] = useState(false);
   const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
   
   // Delete Flow States
@@ -108,6 +111,16 @@ export default function TemplateDetailPage() {
       alert('Failed to update visibility.');
     } finally {
       setIsUpdatingVisibility(false);
+    }
+  };
+
+  const handleCopyBlueprint = async () => {
+    try {
+      await navigator.clipboard.writeText(template?.raw_content ?? '');
+      setIsBlueprintCopied(true);
+      setTimeout(() => setIsBlueprintCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy blueprint:', err);
     }
   };
 
@@ -324,11 +337,20 @@ export default function TemplateDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
         {/* BASE PATTERN PREVIEW */}
         <Card className="lg:col-span-2 border-primary/10 shadow-lg bg-muted/20 overflow-hidden">
-          <CardHeader className="py-4 px-6 border-b bg-primary/5">
+          <CardHeader className="py-4 px-6 border-b bg-primary/5 flex flex-row items-center justify-between space-y-0">
             <CardTitle className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-2">
               <FontAwesomeIcon icon={faLayerGroup} className="h-3 w-3" />
               Prompt Blueprint
             </CardTitle>
+            <Button
+              variant={isBlueprintCopied ? "secondary" : "outline"}
+              size="sm"
+              className="h-8 gap-2"
+              onClick={handleCopyBlueprint}
+            >
+              <FontAwesomeIcon icon={isBlueprintCopied ? faCheck : faCopy} />
+              {isBlueprintCopied ? 'Copied!' : 'Copy Blueprint'}
+            </Button>
           </CardHeader>
           <CardContent className="p-0 md:p-6">
             <div className="relative group">
