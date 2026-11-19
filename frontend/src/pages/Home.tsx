@@ -276,6 +276,7 @@ export default function Home() {
                           className="inline-block h-8 w-8 rounded-full ring-2 ring-background object-cover bg-muted"
                           src={url}
                           alt={`Generation ${i}`}
+                          loading="lazy"
                         />
                       ))}
                     </div>

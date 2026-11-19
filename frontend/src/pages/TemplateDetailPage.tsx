@@ -618,6 +618,7 @@ export default function TemplateDetailPage() {
                     src={item.thumb_url} 
                     alt={item.resolved_text.substring(0, 20)} 
                     className={`w-full h-full object-contain mx-auto block transition-all duration-500 group-hover:scale-105 ${!template.is_public ? 'blur-md group-hover:!blur-none' : ''}`}
+                    loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
                     <div className="space-y-1">
@@ -693,7 +694,7 @@ export default function TemplateDetailPage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {items.map(item => (
                 <div key={item.id} className="relative rounded-2xl border overflow-hidden bg-muted/20">
-                  <img src={item.thumb_url} className="aspect-square w-full object-contain" />
+                  <img src={item.thumb_url} className="aspect-square w-full object-contain" loading="lazy" />
                   <div className="p-2 bg-background/90 text-[8px] font-mono truncate border-t">
                     {Object.entries(item.placeholder_values).slice(0, 1).map(([k, v]) => `${k}:${v}`)}
                   </div>
