@@ -82,6 +82,7 @@ export default function TemplateDetailPage() {
   const [itemsCount, setItemsCount] = useState(0);
   const [itemsPage, setItemsPage] = useState(1);
   const [hasMoreItems, setHasMoreItems] = useState(false);
+  const [isLoadingItems, setIsLoadingItems] = useState(true);
   const [isLoadingMoreItems, setIsLoadingMoreItems] = useState(false);
   const [historyError, setHistoryError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -149,14 +150,38 @@ export default function TemplateDetailPage() {
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
+      setIsLoadingItems(true);
       setError('');
+      setHistoryError('');
       setIsNotFound(false);
+      setItems([]);
+      setItemsCount(0);
+      setItemsPage(1);
+      setHasMoreItems(false);
+
+      const itemsRequest = api.get('items/', { params: { template: id } }).then(
+        response => ({ response }),
+        error => ({ error }),
+      );
+
       let templateLoaded = false;
       try {
         const tplRes = await api.get(`templates/${id}/`);
         templateLoaded = true;
         setTemplate(tplRes.data);
-        const itemsRes = await api.get(`items/`, { params: { template: id } });
+        setIsLoading(false);
+
+        const itemsResult = await itemsRequest;
+        if ('error' in itemsResult) {
+          console.error(itemsResult.error);
+          const detail = axios.isAxiosError(itemsResult.error)
+            ? itemsResult.error.response?.data?.detail
+            : null;
+          setHistoryError(typeof detail === 'string' ? detail : 'Failed to load template history.');
+          return;
+        }
+
+        const itemsRes = itemsResult.response;
         const itemsData = itemsRes.data.results !== undefined ? itemsRes.data.results : itemsRes.data;
         setItems(itemsData);
         setItemsCount(itemsRes.data.count ?? itemsData.length);
@@ -176,6 +201,7 @@ export default function TemplateDetailPage() {
         }
       } finally {
         setIsLoading(false);
+        setIsLoadingItems(false);
       }
     };
     if (id) fetchData();
@@ -325,7 +351,9 @@ export default function TemplateDetailPage() {
                 <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
                 Creator: <span className="text-foreground font-bold">{isOwner ? 'You' : (template.user_username || 'Unknown')}</span>
               </Badge>
-              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">{itemsCount} Generations</Badge>
+              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">
+                {isLoadingItems ? 'Loading generations...' : `${itemsCount} Generations`}
+              </Badge>
               <Badge variant={template.is_public ? "outline" : "secondary"} className={`gap-1.5 ${template.is_public ? 'text-emerald-600 border-emerald-200 bg-emerald-50' : 'text-amber-600 border-amber-200 bg-amber-50'}`}>
                 <FontAwesomeIcon icon={template.is_public ? faGlobe : faLock} className="h-2.5 w-2.5" />
                 {template.is_public ? 'Public' : 'Private'}
@@ -635,7 +663,16 @@ export default function TemplateDetailPage() {
         </h2>
       </div>
 
-      {items.length === 0 ? (
+      {isLoadingItems ? (
+        <div className="flex justify-center py-16 text-muted-foreground" role="status">
+          <FontAwesomeIcon icon={faSpinner} className="h-6 w-6 animate-spin" />
+          <span className="sr-only">Loading history...</span>
+        </div>
+      ) : historyError ? (
+        <p role="alert" className="py-16 text-center text-sm text-destructive">
+          {historyError}
+        </p>
+      ) : items.length === 0 ? (
         <div className="py-20 text-center border-2 border-dashed rounded-3xl bg-muted/10">
           <p className="text-muted-foreground">Start by creating your first item!</p>
         </div>
@@ -703,6 +740,7 @@ export default function TemplateDetailPage() {
                   size="sm"
                   className="font-bold gap-2 bg-destructive/10 text-destructive hover:bg-destructive"
                   onClick={() => setIsConfirm1Open(true)}
+                  disabled={isLoadingItems}
                 >
                   <FontAwesomeIcon icon={faTrash} className="h-3 w-3" />
                   Delete Template
