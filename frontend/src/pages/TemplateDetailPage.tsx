@@ -96,15 +96,6 @@ export default function TemplateDetailPage() {
     return currentUser && template && template.user === currentUser.id;
   }, [currentUser, template]);
 
-  const isRoot = useMemo(() => {
-    // If it's in a chain and it's the first one, or if it has no parents
-    if (!template) return false;
-    if (template.full_chain && template.full_chain.length > 0) {
-      return template.full_chain[0].id === template.id;
-    }
-    return true; // Fallback
-  }, [template]);
-
   const handleTogglePublic = async (checked: boolean) => {
     if (!id) return;
     try {
@@ -295,7 +286,7 @@ export default function TemplateDetailPage() {
           </div>
         </div>
         <div className="flex flex-col md:flex-row gap-4 items-center w-full md:w-auto">
-          {isRoot && isOwner && (
+          {isOwner && (
             <div className="flex items-center space-x-3 bg-card border rounded-2xl px-4 h-12 shadow-sm">
               <FontAwesomeIcon 
                 icon={template.is_public ? faGlobe : faLock} 
