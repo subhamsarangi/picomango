@@ -23,6 +23,7 @@ import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons/faTrian
 import { faCircleExclamation } from '@fortawesome/free-solid-svg-icons/faCircleExclamation';
 import { faChevronLeft } from '@fortawesome/free-solid-svg-icons/faChevronLeft';
 import { faChevronRight } from '@fortawesome/free-solid-svg-icons/faChevronRight';
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons/faChevronDown';
 import { faListCheck } from '@fortawesome/free-solid-svg-icons/faListCheck';
 import { faSitemap } from '@fortawesome/free-solid-svg-icons/faSitemap';
 import { Badge } from "@/components/ui/badge";
@@ -78,6 +79,11 @@ export default function TemplateDetailPage() {
   
   useDocumentTitle(isNotFound ? 'Page Not Found' : template?.title || 'Loading Template...');
   const [items, setItems] = useState<Item[]>([]);
+  const [itemsCount, setItemsCount] = useState(0);
+  const [itemsPage, setItemsPage] = useState(1);
+  const [hasMoreItems, setHasMoreItems] = useState(false);
+  const [isLoadingMoreItems, setIsLoadingMoreItems] = useState(false);
+  const [historyError, setHistoryError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [isBlueprintCopied, setIsBlueprintCopied] = useState(false);
@@ -153,6 +159,9 @@ export default function TemplateDetailPage() {
         const itemsRes = await api.get(`items/`, { params: { template: id } });
         const itemsData = itemsRes.data.results !== undefined ? itemsRes.data.results : itemsRes.data;
         setItems(itemsData);
+        setItemsCount(itemsRes.data.count ?? itemsData.length);
+        setItemsPage(1);
+        setHasMoreItems(Boolean(itemsRes.data.next));
       } catch (err: unknown) {
         console.error(err);
         if (
@@ -171,6 +180,28 @@ export default function TemplateDetailPage() {
     };
     if (id) fetchData();
   }, [id]);
+
+  const handleLoadMoreItems = async () => {
+    if (!id || isLoadingMoreItems || !hasMoreItems) return;
+
+    setIsLoadingMoreItems(true);
+    setHistoryError('');
+    const nextPage = itemsPage + 1;
+    try {
+      const response = await api.get('items/', {
+        params: { template: id, page: nextPage },
+      });
+      const pageItems = response.data.results !== undefined ? response.data.results : response.data;
+      setItems(currentItems => [...currentItems, ...pageItems]);
+      setItemsPage(nextPage);
+      setHasMoreItems(Boolean(response.data.next));
+    } catch (err) {
+      console.error(err);
+      setHistoryError('Failed to load more history. Please try again.');
+    } finally {
+      setIsLoadingMoreItems(false);
+    }
+  };
 
   // Derived: Unique values for each placeholder
   const placeholderStats = useMemo(() => {
@@ -294,7 +325,7 @@ export default function TemplateDetailPage() {
                 <div className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
                 Creator: <span className="text-foreground font-bold">{isOwner ? 'You' : (template.user_username || 'Unknown')}</span>
               </Badge>
-              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">{items.length} Generations</Badge>
+              <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">{itemsCount} Generations</Badge>
               <Badge variant={template.is_public ? "outline" : "secondary"} className={`gap-1.5 ${template.is_public ? 'text-emerald-600 border-emerald-200 bg-emerald-50' : 'text-amber-600 border-amber-200 bg-amber-50'}`}>
                 <FontAwesomeIcon icon={template.is_public ? faGlobe : faLock} className="h-2.5 w-2.5" />
                 {template.is_public ? 'Public' : 'Private'}
@@ -387,7 +418,7 @@ export default function TemplateDetailPage() {
                      <div className="flex flex-col items-start gap-1">
                         <span className="text-xs font-bold uppercase tracking-widest text-primary/70">{p}</span>
                         <span className="text-[10px] text-muted-foreground">
-                          {placeholderStats[p]?.length || 0} unique values
+                          {placeholderStats[p]?.length || 0} unique values{items.length < itemsCount ? ' in loaded history' : ''}
                         </span>
                      </div>
                    </AccordionTrigger>
@@ -638,6 +669,25 @@ export default function TemplateDetailPage() {
           ))}
         </div>
       )}
+      {historyError && (
+        <p role="alert" className="mt-4 text-center text-sm text-destructive">
+          {historyError}
+        </p>
+      )}
+      {hasMoreItems && (
+        <div className="mt-8 flex justify-center">
+          <Button
+            variant="outline"
+            size="lg"
+            className="gap-3"
+            onClick={handleLoadMoreItems}
+            disabled={isLoadingMoreItems}
+          >
+            <FontAwesomeIcon icon={isLoadingMoreItems ? faSpinner : faChevronDown} className={isLoadingMoreItems ? 'animate-spin' : ''} />
+            {isLoadingMoreItems ? 'Loading History...' : `Load More History (${items.length} of ${itemsCount})`}
+          </Button>
+        </div>
+      )}
 
       {/* DANGER ZONE ACCORDION (Owner only) */}
       {isOwner && (
@@ -674,7 +724,7 @@ export default function TemplateDetailPage() {
             <DialogDescription className="text-base py-4">
               Delete template <span className="font-bold">"{template.title}"</span>?
               <br/><br/>
-              This will destroy all <span className="font-bold text-destructive">{items.length} items</span> linked to it.
+              This will destroy all <span className="font-bold text-destructive">{itemsCount} items</span> linked to it.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2">
@@ -688,7 +738,9 @@ export default function TemplateDetailPage() {
         <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col rounded-3xl overflow-hidden">
           <DialogHeader className="p-6 pb-0">
             <DialogTitle className="text-2xl font-bold">Final Review</DialogTitle>
-            <DialogDescription>Items to be lost forever:</DialogDescription>
+            <DialogDescription>
+              Showing {items.length} of {itemsCount} items. Deleting removes all {itemsCount} linked items, including items not yet loaded.
+            </DialogDescription>
           </DialogHeader>
           <div className="flex-1 overflow-y-auto my-6 px-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
