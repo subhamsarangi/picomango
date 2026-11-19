@@ -78,6 +78,7 @@ export default function TemplateDetailPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isUpdatingVisibility, setIsUpdatingVisibility] = useState(false);
   
   // Delete Flow States
   const [isConfirm1Open, setIsConfirm1Open] = useState(false);
@@ -98,12 +99,15 @@ export default function TemplateDetailPage() {
 
   const handleTogglePublic = async (checked: boolean) => {
     if (!id) return;
+    setIsUpdatingVisibility(true);
     try {
       await api.patch(`templates/${id}/`, { is_public: checked });
       setTemplate(prev => prev ? { ...prev, is_public: checked } : null);
     } catch (err) {
       console.error(err);
       alert('Failed to update visibility.');
+    } finally {
+      setIsUpdatingVisibility(false);
     }
   };
 
@@ -287,10 +291,13 @@ export default function TemplateDetailPage() {
         </div>
         <div className="flex flex-col md:flex-row gap-4 items-center w-full md:w-auto">
           {isOwner && (
-            <div className="flex items-center space-x-3 bg-card border rounded-2xl px-4 h-12 shadow-sm">
+            <div
+              className="flex items-center space-x-3 bg-card border rounded-2xl px-4 h-12 shadow-sm"
+              aria-busy={isUpdatingVisibility}
+            >
               <FontAwesomeIcon 
-                icon={template.is_public ? faGlobe : faLock} 
-                className={`h-4 w-4 ${template.is_public ? 'text-emerald-500' : 'text-amber-500'}`} 
+                icon={isUpdatingVisibility ? faSpinner : template.is_public ? faGlobe : faLock}
+                className={`h-4 w-4 ${isUpdatingVisibility ? 'animate-spin text-muted-foreground' : template.is_public ? 'text-emerald-500' : 'text-amber-500'}`}
               />
               <Label htmlFor="public-toggle" className="text-sm font-bold cursor-pointer whitespace-nowrap">
                 {template.is_public ? 'Public' : 'Private'}
@@ -299,6 +306,7 @@ export default function TemplateDetailPage() {
                 id="public-toggle" 
                 checked={template.is_public}
                 onCheckedChange={handleTogglePublic}
+                disabled={isUpdatingVisibility}
               />
             </div>
           )}
