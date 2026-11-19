@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Link as RouterLink } from 'react-router-dom';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -55,6 +55,7 @@ export default function Home() {
   
   // Search and Filter States
   const [search, setSearch] = useState('');
+  const searchDebouncePending = useRef(false);
   const [onlyRoots, setOnlyRoots] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
@@ -100,9 +101,11 @@ export default function Home() {
       }
     };
     
+    const shouldDebounceSearch = page === 1 && searchDebouncePending.current;
     const timer = setTimeout(() => {
+      if (shouldDebounceSearch) searchDebouncePending.current = false;
       fetchTemplates();
-    }, page === 1 ? 400 : 0); // Debounce search on first page
+    }, shouldDebounceSearch ? 400 : 0);
 
     return () => clearTimeout(timer);
   }, [page, search, onlyRoots]);
@@ -169,7 +172,10 @@ export default function Home() {
             placeholder="Search templates by title or content..." 
             className="pl-12 h-14 bg-background border-primary/10 rounded-2xl text-lg focus-visible:ring-primary/20"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              searchDebouncePending.current = true;
+              setSearch(e.target.value);
+            }}
           />
         </div>
         <div className="flex items-center gap-6 px-4 bg-background border border-primary/10 rounded-2xl h-14 lg:w-auto">
