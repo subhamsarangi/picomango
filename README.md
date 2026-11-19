@@ -42,7 +42,8 @@ This project is designed to be deployed separately using the **Root Directory** 
 1. Create a project on Vercel.
 2. Set **Root Directory** to `frontend`.
 3. Vercel will auto-detect Vite.
-4. Add Environment Variable:
+4. `frontend/vercel.json` rewrites direct route requests to the SPA entry point, so React Router paths work on refresh.
+5. Add Environment Variable:
    - `VITE_API_URL`: Your Render backend URL (e.g., `https://api.picomango.com/api/`).
 
 ### Migrate one user to production
