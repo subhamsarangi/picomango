@@ -1,4 +1,4 @@
-from django.db.models import Count, Q
+from django.db.models import Count, Prefetch, Q
 from rest_framework import generics, viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated, BasePermission, SAFE_METHODS
@@ -7,7 +7,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from django.contrib.auth import get_user_model
 from .serializers import (
     EmailTokenObtainPairSerializer, SignupSerializer,
-    PromptTemplateSerializer, ItemSerializer, ItemFromScratchSerializer, UserSerializer
+    PromptTemplateSerializer, PromptTemplateListSerializer, ItemSerializer,
+    ItemFromScratchSerializer, UserSerializer
 )
 from .models import PromptTemplate, Item
 
@@ -39,6 +40,11 @@ class PromptTemplateViewSet(viewsets.ModelViewSet):
     serializer_class = PromptTemplateSerializer
     permission_classes = (IsOwnerOrReadOnlyPublic,)
 
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return PromptTemplateListSerializer
+        return super().get_serializer_class()
+
     def get_queryset(self):
         user = self.request.user
         if user.is_authenticated:
@@ -49,9 +55,18 @@ class PromptTemplateViewSet(viewsets.ModelViewSet):
             qs = PromptTemplate.objects.filter(is_public=True)
 
         qs = qs.annotate(
-            annotated_item_count=Count('items'),
-            annotated_parent_count=Count('previous_templates')
+            annotated_item_count=Count('items', distinct=True),
+            annotated_parent_count=Count('previous_templates', distinct=True)
         ).order_by('-created_at')
+
+        if self.action == 'list':
+            qs = qs.select_related('user').prefetch_related(
+                Prefetch(
+                    'items',
+                    queryset=Item.objects.only('template_id', 'thumb_url').order_by('-created_at')[:3],
+                    to_attr='latest_items',
+                )
+            )
 
         # Search filter
         search = self.request.query_params.get('search')

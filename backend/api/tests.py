@@ -46,6 +46,8 @@ class AuthTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
 from django.test import TestCase
+from django.test.utils import CaptureQueriesContext
+from django.db import connection
 from .models import PromptTemplate, Item
 
 class ModelTests(TestCase):
@@ -103,6 +105,47 @@ class TemplateCRUDTests(APITestCase):
         self.user = User.objects.create_user(username='test_template_user', email='template@test.com', password='pwd')
         self.client.force_authenticate(user=self.user)
         self.url = '/api/templates/'
+
+    def test_template_list_query_count_does_not_grow_per_template(self):
+        def create_template(index):
+            template = PromptTemplate.objects.create(
+                title=f'Template {index}',
+                raw_content=f'Prompt {index}',
+                user=self.user,
+            )
+            for item_index in range(2):
+                Item.objects.create(
+                    template=template,
+                    user=self.user,
+                    resolved_text=f'Prompt {index}',
+                    image_url='https://example.com/image.jpg',
+                    thumb_url=f'https://example.com/thumb-{index}-{item_index}.jpg',
+                )
+            return template
+
+        create_template(1)
+        with CaptureQueriesContext(connection) as one_template_queries:
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        create_template(2)
+        template = create_template(3)
+        for index in range(2):
+            PromptTemplate.objects.create(
+                title=f'Parent {index}',
+                raw_content=f'Parent prompt {index}',
+                next_template=template,
+                user=self.user,
+            )
+        with CaptureQueriesContext(connection) as three_template_queries:
+            response = self.client.get(self.url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(one_template_queries), len(three_template_queries))
+
+        result = next(row for row in response.data['results'] if row['title'] == 'Template 3')
+        self.assertEqual(result['item_count'], 2)
+        self.assertFalse(result['is_root'])
+        self.assertEqual(len(result['item_thumbnails']), 2)
 
     def test_template_crud_and_lock(self):
         template = PromptTemplate.objects.create(raw_content='A plain prompt', is_locked=False)

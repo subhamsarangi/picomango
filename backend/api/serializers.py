@@ -104,7 +104,11 @@ class PromptTemplateSerializer(serializers.ModelSerializer):
         return {}
 
     def get_item_thumbnails(self, obj):
+        prefetched_items = getattr(obj, 'latest_items', None)
+        if prefetched_items is not None:
+            return [item.thumb_url for item in prefetched_items]
         return list(obj.items.order_by('-created_at').values_list('thumb_url', flat=True)[:3])
+
     def validate(self, data):
         user = self.context['request'].user
         if self.instance and self.instance.is_locked:
@@ -130,6 +134,13 @@ class PromptTemplateSerializer(serializers.ModelSerializer):
                 origin_item.placeholder_values = extracted
                 origin_item.save()
         return template
+
+class PromptTemplateListSerializer(PromptTemplateSerializer):
+    class Meta(PromptTemplateSerializer.Meta):
+        fields = (
+            'id', 'title', 'raw_content', 'is_locked', 'is_public', 'user',
+            'created_at', 'item_count', 'is_root', 'item_thumbnails',
+        )
 
 class ItemSerializer(serializers.ModelSerializer):
     image_file = serializers.ImageField(write_only=True, required=True)
